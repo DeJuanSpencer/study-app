@@ -56,7 +56,7 @@ export default function KeyTermsList({ terms }: KeyTermsListProps) {
 
       {filtered.length === 0 && search && (
         <p className="text-sm text-muted-foreground text-center py-4">
-          No terms match &ldquo;{search}&rdquo;
+          No terms match "{search}"
         </p>
       )}
     </div>

@@ -26,11 +26,11 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto w-full px-6 py-12 space-y-12">
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">
-              Study smarter, not harder
+              Turn your notes into flashcards
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Upload your class material and get higher-order flashcards that
-              test understanding — not memorization.
+              Upload your class material and get flashcards that test real
+              understanding, not just memorization.
             </p>
           </div>
 
@@ -54,7 +54,7 @@ export default function HomePage() {
                             {deck.title}
                           </h3>
                           <p className="text-xs text-muted-foreground">
-                            {deck.cards.length} cards &middot;{" "}
+                            {deck.cards.length} cards -{" "}
                             {new Date(deck.createdAt).toLocaleDateString()}
                           </p>
                         </div>

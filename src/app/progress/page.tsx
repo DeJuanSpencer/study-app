@@ -14,7 +14,7 @@ export default function ProgressPage() {
               Your Progress
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Track your learning journey across all decks
+              See how you're doing across all your decks
             </p>
           </div>
           <ProgressDashboard />

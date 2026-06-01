@@ -228,7 +228,7 @@ export default function DeckView({
             {deck.title}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {deck.cards.length} cards &middot; Created{" "}
+            {deck.cards.length} cards - Created{" "}
             {new Date(deck.createdAt).toLocaleDateString()}
           </p>
           <div className="flex items-center gap-3 mt-1 text-xs">
@@ -457,7 +457,7 @@ export default function DeckView({
           <DialogHeader>
             <DialogTitle>Delete this deck?</DialogTitle>
             <DialogDescription>
-              This will permanently delete &ldquo;{deck.title}&rdquo; and all{" "}
+              This will permanently delete "{deck.title}" and all{" "}
               {deck.cards.length} cards. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>

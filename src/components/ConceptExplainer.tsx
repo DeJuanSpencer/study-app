@@ -94,7 +94,7 @@ export default function ConceptExplainer({
       <Card className="p-6 text-center">
         <h3 className="text-lg font-medium mb-2">{concept}</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Get a structured explanation of this concept
+          Break down this concept step by step
         </p>
         <Button onClick={() => fetchExplanation()}>
           <BookOpen className="h-4 w-4 mr-1.5" />

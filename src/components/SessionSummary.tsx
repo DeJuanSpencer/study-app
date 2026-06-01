@@ -50,7 +50,7 @@ export default function SessionSummary({
           Session Complete
         </h2>
         <p className="text-muted-foreground">
-          You reviewed {stats.total} cards from &ldquo;{deck.title}&rdquo;
+          You reviewed {stats.total} cards from "{deck.title}"
         </p>
       </div>
 

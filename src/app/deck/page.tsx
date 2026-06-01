@@ -76,7 +76,7 @@ function DeckPageContent() {
             >
               <h3 className="font-medium leading-tight">{d.title}</h3>
               <p className="text-xs text-muted-foreground mt-1">
-                {d.cards.length} cards &middot;{" "}
+                {d.cards.length} cards -{" "}
                 {new Date(d.createdAt).toLocaleDateString()}
               </p>
             </Card>
