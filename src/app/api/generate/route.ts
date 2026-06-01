@@ -21,6 +21,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const MAX_TEXT_LENGTH = 100_000;
+    if (material.rawText.length > MAX_TEXT_LENGTH) {
+      material.rawText = material.rawText.slice(0, MAX_TEXT_LENGTH);
+      material.sections = material.sections.map((s) => ({
+        ...s,
+        content: s.content.slice(0, 20_000),
+      }));
+    }
+
     const count = Math.min(Math.max(cardCount, 1), 30);
     const cards = await generateCards(material, count);
 

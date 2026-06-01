@@ -118,10 +118,19 @@ export default function FileUpload() {
 
       setStatus("generating");
 
+      const trimmedMaterial = {
+        ...material,
+        rawText: material.rawText.slice(0, 100_000),
+        sections: material.sections.map((s) => ({
+          ...s,
+          content: s.content.slice(0, 20_000),
+        })),
+      };
+
       const genRes = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ material, cardCount }),
+        body: JSON.stringify({ material: trimmedMaterial, cardCount }),
       });
 
       setStatus("validating");
