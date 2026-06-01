@@ -1,5 +1,16 @@
 import { WebSearchResult } from "../types";
 
+const TRUSTED_TLDS = [".gov", ".edu", ".org"];
+
+function isTrustedUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return TRUSTED_TLDS.some((tld) => hostname.endsWith(tld));
+  } catch {
+    return false;
+  }
+}
+
 let tavilyClient: any = null;
 
 async function getTavilyClient() {
@@ -46,11 +57,13 @@ export async function searchTopics(
           });
           return {
             query,
-            results: (response.results ?? []).map((r: any) => ({
-              title: r.title ?? "",
-              url: r.url ?? "",
-              content: r.content ?? "",
-            })),
+            results: (response.results ?? [])
+              .map((r: any) => ({
+                title: r.title ?? "",
+                url: r.url ?? "",
+                content: r.content ?? "",
+              }))
+              .filter((r: { url: string }) => isTrustedUrl(r.url)),
           } as WebSearchResult;
         } catch {
           return { query, results: [] } as WebSearchResult;
