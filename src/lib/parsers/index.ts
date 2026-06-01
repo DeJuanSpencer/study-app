@@ -18,8 +18,10 @@ export function detectFormat(fileName: string, mimeType?: string): SupportedForm
     return "docx";
   if (
     ext === "pptx" ||
+    ext === "ppt" ||
     mimeType ===
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+    mimeType === "application/vnd.ms-powerpoint"
   )
     return "pptx";
   if (ext === "txt" || mimeType === "text/plain") return "text";
@@ -36,7 +38,7 @@ export async function parseFile(
 
   if (!format) {
     throw new Error(
-      `Unsupported file format: ${fileName}. Supported formats: PDF, DOCX, PPTX, TXT`
+      `Unsupported file format: ${fileName}. Supported formats: PDF, DOCX, PPTX, PPT, TXT`
     );
   }
 

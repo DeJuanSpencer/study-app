@@ -15,10 +15,11 @@ const ACCEPTED_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-powerpoint",
   "text/plain",
 ];
 
-const ACCEPTED_EXTENSIONS = ".pdf,.docx,.pptx,.txt";
+const ACCEPTED_EXTENSIONS = ".pdf,.docx,.pptx,.ppt,.txt";
 
 export default function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
@@ -190,7 +191,7 @@ export default function FileUpload() {
                   <div>
                     <p className="font-medium">Drop your file here</p>
                     <p className="text-sm text-muted-foreground">
-                      PDF, DOCX, PPTX, or TXT
+                      PDF, DOCX, PPTX, PPT, or TXT
                     </p>
                   </div>
                 </>
