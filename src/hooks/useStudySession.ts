@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { FlashCard, Grade, CardResult, StudySessionResult } from "@/lib/types";
-import { saveSessionResult } from "@/lib/storage";
+import {
+  FlashCard,
+  Grade,
+  CardResult,
+  StudySessionResult,
+  CardMastery,
+  Difficulty,
+} from "@/lib/types";
+import { saveSessionResult, loadMastery, saveMastery } from "@/lib/storage";
+import { calculateNextReview, sortByPriority, isDue } from "@/lib/srs";
 
 interface StudySessionState {
   currentIndex: number;
@@ -12,14 +20,95 @@ interface StudySessionState {
   isComplete: boolean;
 }
 
+interface TierStatus {
+  active: Difficulty;
+  foundationalMastered: number;
+  foundationalTotal: number;
+  intermediateMastered: number;
+  intermediateTotal: number;
+  intermediateUnlocked: boolean;
+  advancedUnlocked: boolean;
+}
+
+const UNLOCK_THRESHOLD = 0.6;
+
+function buildAdaptiveQueue(
+  cards: FlashCard[],
+  masteryMap: Map<string, CardMastery>
+): { queue: FlashCard[]; tierStatus: TierStatus } {
+  const foundational = cards.filter((c) => c.difficulty === "foundational");
+  const intermediate = cards.filter((c) => c.difficulty === "intermediate");
+  const advanced = cards.filter((c) => c.difficulty === "advanced");
+
+  const countMastered = (pool: FlashCard[]) =>
+    pool.filter((c) => {
+      const m = masteryMap.get(c.id);
+      return m && m.lastGrade === "got-it" && m.reviewCount > 0;
+    }).length;
+
+  const foundationalMastered = countMastered(foundational);
+  const intermediateMastered = countMastered(intermediate);
+
+  const intermediateUnlocked =
+    foundational.length === 0 ||
+    foundationalMastered / foundational.length >= UNLOCK_THRESHOLD;
+  const advancedUnlocked =
+    intermediateUnlocked &&
+    (intermediate.length === 0 ||
+      intermediateMastered / intermediate.length >= UNLOCK_THRESHOLD);
+
+  let eligible = [...foundational];
+  if (intermediateUnlocked) eligible.push(...intermediate);
+  if (advancedUnlocked) eligible.push(...advanced);
+
+  const sortedIds = sortByPriority(
+    eligible.map((c) => c.id),
+    masteryMap
+  );
+
+  const cardMap = new Map(eligible.map((c) => [c.id, c]));
+  const queue = sortedIds.map((id) => cardMap.get(id)!);
+
+  const active: Difficulty = advancedUnlocked
+    ? "advanced"
+    : intermediateUnlocked
+      ? "intermediate"
+      : "foundational";
+
+  return {
+    queue,
+    tierStatus: {
+      active,
+      foundationalMastered,
+      foundationalTotal: foundational.length,
+      intermediateMastered,
+      intermediateTotal: intermediate.length,
+      intermediateUnlocked,
+      advancedUnlocked,
+    },
+  };
+}
+
 export function useStudySession(deckId: string, cards: FlashCard[]) {
+  const masteryData = useMemo(() => {
+    const data = loadMastery(deckId);
+    return new Map(data.map((m) => [m.cardId, m]));
+  }, [deckId]);
+
+  const { queue: initialQueue, tierStatus: initialTierStatus } = useMemo(
+    () => buildAdaptiveQueue(cards, masteryData),
+    [cards, masteryData]
+  );
+
   const [state, setState] = useState<StudySessionState>(() => ({
     currentIndex: 0,
     isRevealed: false,
     results: [],
-    queue: shuffleArray([...cards]),
+    queue: initialQueue,
     isComplete: false,
   }));
+
+  const [tierStatus, setTierStatus] = useState<TierStatus>(initialTierStatus);
 
   const currentCard = state.queue[state.currentIndex] ?? null;
 
@@ -35,6 +124,16 @@ export function useStudySession(deckId: string, cards: FlashCard[]) {
   const grade = useCallback(
     (g: Grade) => {
       if (!currentCard) return;
+
+      const currentMastery = masteryData.get(currentCard.id) ?? null;
+      const newMastery = calculateNextReview(
+        currentMastery,
+        g,
+        currentCard.id,
+        deckId
+      );
+      saveMastery(newMastery);
+      masteryData.set(currentCard.id, newMastery);
 
       setState((prev) => {
         const newResults = [
@@ -66,6 +165,13 @@ export function useStudySession(deckId: string, cards: FlashCard[]) {
           saveSessionResult(sessionResult);
         }
 
+        // Check if new tiers unlocked
+        const { tierStatus: updatedTiers } = buildAdaptiveQueue(
+          cards,
+          masteryData
+        );
+        setTierStatus(updatedTiers);
+
         return {
           ...prev,
           results: newResults,
@@ -76,18 +182,25 @@ export function useStudySession(deckId: string, cards: FlashCard[]) {
         };
       });
     },
-    [currentCard, cards, deckId]
+    [currentCard, cards, deckId, masteryData]
   );
 
   const restart = useCallback(() => {
+    const freshMastery = loadMastery(deckId);
+    const freshMap = new Map(freshMastery.map((m) => [m.cardId, m]));
+    const { queue, tierStatus: freshTiers } = buildAdaptiveQueue(
+      cards,
+      freshMap
+    );
+    setTierStatus(freshTiers);
     setState({
       currentIndex: 0,
       isRevealed: false,
       results: [],
-      queue: shuffleArray([...cards]),
+      queue,
       isComplete: false,
     });
-  }, [cards]);
+  }, [cards, deckId]);
 
   const sessionResult = useMemo((): StudySessionResult | null => {
     if (!state.isComplete) return null;
@@ -99,6 +212,14 @@ export function useStudySession(deckId: string, cards: FlashCard[]) {
       weakConcepts: computeWeakConcepts(state.results, cards),
     };
   }, [state.isComplete, state.results, deckId, cards]);
+
+  const dueCount = useMemo(() => {
+    let count = 0;
+    for (const [, m] of masteryData) {
+      if (isDue(m)) count++;
+    }
+    return count;
+  }, [masteryData]);
 
   return {
     currentCard,
@@ -112,16 +233,9 @@ export function useStudySession(deckId: string, cards: FlashCard[]) {
     grade,
     restart,
     sessionResult,
+    tierStatus,
+    dueCount,
   };
-}
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
 }
 
 function computeWeakConcepts(

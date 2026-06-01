@@ -30,12 +30,27 @@ export interface FlashCard {
   validation?: ValidationResult;
 }
 
+export interface ConceptRelation {
+  from: string;
+  to: string;
+  relationship: string;
+}
+
 export interface Deck {
   id: string;
   title: string;
   cards: FlashCard[];
+  keyTerms?: KeyTerm[];
+  conceptRelations?: ConceptRelation[];
   createdAt: string;
   materialMetadata: MaterialMetadata;
+}
+
+export interface KeyTerm {
+  id: string;
+  term: string;
+  definition: string;
+  sourceSection: string;
 }
 
 export type Grade = "got-it" | "partially" | "missed-it";
@@ -76,6 +91,16 @@ export interface ValidationResult {
   confidence: number;
   issues: ValidationIssue[];
   sourcesChecked: string[];
+}
+
+export interface CardMastery {
+  cardId: string;
+  deckId: string;
+  ease: number;
+  interval: number;
+  nextReview: string;
+  reviewCount: number;
+  lastGrade: Grade;
 }
 
 export interface WebSearchResult {

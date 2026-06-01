@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, GraduationCap, Lightbulb } from "lucide-react";
+import { BookOpen, LayoutDashboard, GraduationCap, Lightbulb, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/deck", label: "Deck", icon: LayoutDashboard },
   { href: "/study", label: "Study", icon: GraduationCap },
   { href: "/explain", label: "Explain", icon: Lightbulb },
+  { href: "/progress", label: "Progress", icon: TrendingUp },
 ];
 
 export default function Header() {

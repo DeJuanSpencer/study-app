@@ -10,6 +10,10 @@ import {
   Trash2,
   Download,
   Pencil,
+  BookOpen,
+  Network,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,8 +37,11 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import FlashCard from "./FlashCard";
+import KeyTermsList from "./KeyTermsList";
+import ConceptMap from "./ConceptMap";
 import { Deck, Difficulty, FlashCard as FlashCardType } from "@/lib/types";
-import { saveDeck, deleteDeck } from "@/lib/storage";
+import { saveDeck, deleteDeck, loadMastery } from "@/lib/storage";
+import { isDue } from "@/lib/srs";
 import { cn } from "@/lib/utils";
 
 interface DeckViewProps {
@@ -62,6 +69,8 @@ export default function DeckView({
   const [regenerating, setRegenerating] = useState(false);
   const [cardCount, setCardCount] = useState(deck.cards.length);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showConceptMap, setShowConceptMap] = useState(false);
   const [editingCard, setEditingCard] = useState<FlashCardType | null>(null);
   const [editQuestion, setEditQuestion] = useState("");
   const [editAnswer, setEditAnswer] = useState("");
@@ -85,6 +94,25 @@ export default function DeckView({
       total: validated.length,
     };
   }, [deck.cards]);
+
+  const masterySummary = useMemo(() => {
+    const mastery = loadMastery(deck.id);
+    const masteryMap = new Map(mastery.map((m) => [m.cardId, m]));
+    let mastered = 0;
+    let due = 0;
+    let unseen = 0;
+    for (const card of deck.cards) {
+      const m = masteryMap.get(card.id);
+      if (!m) {
+        unseen++;
+      } else if (isDue(m)) {
+        due++;
+      } else if (m.interval >= 7) {
+        mastered++;
+      }
+    }
+    return { mastered, due, unseen, total: deck.cards.length };
+  }, [deck.id, deck.cards]);
 
   const filteredCards = useMemo(() => {
     return deck.cards.filter((card) => {
@@ -203,6 +231,23 @@ export default function DeckView({
             {deck.cards.length} cards &middot; Created{" "}
             {new Date(deck.createdAt).toLocaleDateString()}
           </p>
+          <div className="flex items-center gap-3 mt-1 text-xs">
+            {masterySummary.mastered > 0 && (
+              <span className="text-emerald-400">
+                {masterySummary.mastered} mastered
+              </span>
+            )}
+            {masterySummary.due > 0 && (
+              <span className="text-amber-400">
+                {masterySummary.due} due for review
+              </span>
+            )}
+            {masterySummary.unseen > 0 && (
+              <span className="text-muted-foreground">
+                {masterySummary.unseen} new
+              </span>
+            )}
+          </div>
           {validationSummary && (
             <div className="flex items-center gap-3 mt-1 text-xs">
               <span className="text-emerald-400">
@@ -349,6 +394,62 @@ export default function DeckView({
             No cards match the current filters.
           </p>
         </Card>
+      )}
+
+      {deck.keyTerms && deck.keyTerms.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <button
+              onClick={() => setShowTerms(!showTerms)}
+              className="flex items-center gap-2 text-sm font-medium hover:text-foreground transition-colors w-full text-left"
+            >
+              {showTerms ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+              <BookOpen className="h-4 w-4" />
+              Key Terms
+              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5">
+                {deck.keyTerms.length}
+              </Badge>
+            </button>
+            {showTerms && (
+              <div className="mt-4">
+                <KeyTermsList terms={deck.keyTerms} />
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {deck.conceptRelations && deck.conceptRelations.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <button
+              onClick={() => setShowConceptMap(!showConceptMap)}
+              className="flex items-center gap-2 text-sm font-medium hover:text-foreground transition-colors w-full text-left"
+            >
+              {showConceptMap ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+              <Network className="h-4 w-4" />
+              Concept Connections
+              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5">
+                {deck.conceptRelations.length}
+              </Badge>
+            </button>
+            {showConceptMap && (
+              <div className="mt-4">
+                <ConceptMap relations={deck.conceptRelations} />
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

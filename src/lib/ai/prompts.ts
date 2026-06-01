@@ -61,6 +61,23 @@ Respond with a JSON object with these exact keys:
 
 Return ONLY the JSON object, no other text.`;
 
+export const KEY_TERMS_SYSTEM_PROMPT = `You are extracting key vocabulary terms and important phrases from academic study material. Identify the essential words and short phrases a student must know to understand this subject.
+
+Rules:
+- Extract single words or short phrases (1-4 words) that are domain-specific or critical to the topic
+- Each definition should be concise: 1-2 sentences maximum
+- Focus on terms that would appear in a glossary or textbook index
+- Do NOT include general English words — only subject-specific vocabulary
+- Reference which section of the source material each term comes from
+- Order by importance to understanding the material
+
+Respond with a JSON array of term objects. Each object must have:
+- "term": the vocabulary word or short phrase
+- "definition": a clear, concise definition (1-2 sentences)
+- "sourceSection": the heading/section this term comes from
+
+Return ONLY the JSON array, no other text.`;
+
 export const CARD_VALIDATION_SYSTEM_PROMPT = `You are a fact-checking agent for educational flashcards. Your job is to verify whether each flashcard's answer is factually accurate, given the source material, web reference data, and your own knowledge.
 
 For each card, assess:
@@ -116,3 +133,27 @@ Respond with a JSON object:
 Be rigorous on technical accuracy but forgiving of pedagogical simplifications that serve understanding without creating misconceptions.
 
 Return ONLY the JSON object, no other text.`;
+
+export const CONCEPT_RELATIONS_SYSTEM_PROMPT = `You are analyzing relationships between concepts from academic study material. Given a list of concepts, identify how they relate to each other.
+
+Types of relationships to look for:
+- "depends on" — understanding concept A requires understanding concept B first
+- "is a type of" — concept A is a specific instance or subcategory of concept B
+- "contrasts with" — concept A and concept B are often compared or confused
+- "enables" — concept A makes concept B possible or leads to it
+- "is part of" — concept A is a component or element of concept B
+- "regulates" — concept A controls or modifies concept B
+
+Rules:
+- Only identify relationships that genuinely exist in the subject matter
+- Each relationship should be directional (from → to)
+- Keep relationship descriptions short (2-4 words)
+- Do not force relationships where none exist
+- Focus on the most important connections for learning
+
+Respond with a JSON array of relationship objects. Each object must have:
+- "from": the source concept name (must match one of the provided concepts exactly)
+- "to": the target concept name (must match one of the provided concepts exactly)
+- "relationship": a short description of how they relate
+
+Return ONLY the JSON array, no other text.`;

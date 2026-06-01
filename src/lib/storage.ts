@@ -1,7 +1,8 @@
-import { Deck, StudySessionResult } from "./types";
+import { Deck, StudySessionResult, CardMastery } from "./types";
 
 const DECKS_KEY = "studydeck_decks";
 const SESSIONS_KEY = "studydeck_sessions";
+const MASTERY_KEY = "studydeck_mastery";
 
 function getItem<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -63,4 +64,26 @@ export function loadSessionResults(deckId?: string): StudySessionResult[] {
   const sessions = getItem<StudySessionResult[]>(SESSIONS_KEY) ?? [];
   if (deckId) return sessions.filter((s) => s.deckId === deckId);
   return sessions;
+}
+
+export function loadMastery(deckId: string): CardMastery[] {
+  const all = getItem<CardMastery[]>(MASTERY_KEY) ?? [];
+  return all.filter((m) => m.deckId === deckId);
+}
+
+export function loadAllMastery(): CardMastery[] {
+  return getItem<CardMastery[]>(MASTERY_KEY) ?? [];
+}
+
+export function saveMastery(mastery: CardMastery): void {
+  const all = getItem<CardMastery[]>(MASTERY_KEY) ?? [];
+  const idx = all.findIndex(
+    (m) => m.cardId === mastery.cardId && m.deckId === mastery.deckId
+  );
+  if (idx >= 0) {
+    all[idx] = mastery;
+  } else {
+    all.push(mastery);
+  }
+  setItem(MASTERY_KEY, all);
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Minus, X, Eye, Lightbulb } from "lucide-react";
+import { Check, Minus, X, Eye, Lightbulb, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
@@ -35,6 +36,8 @@ export default function StudySession({ deck }: StudySessionProps) {
     grade,
     restart,
     sessionResult,
+    tierStatus,
+    dueCount,
   } = useStudySession(deck.id, deck.cards);
 
   if (isComplete && sessionResult) {
@@ -59,6 +62,32 @@ export default function StudySession({ deck }: StudySessionProps) {
           <span>{cardsRemaining} remaining</span>
         </div>
         <Progress value={progress} className="h-2" />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Badge variant="outline" className="text-xs capitalize">
+            {tierStatus.active} level
+          </Badge>
+          {dueCount > 0 && (
+            <span className="text-amber-400">{dueCount} due for review</span>
+          )}
+          {!tierStatus.intermediateUnlocked && tierStatus.foundationalTotal > 0 && (
+            <span className="flex items-center gap-1">
+              <Lock className="h-3 w-3" />
+              Intermediate: {tierStatus.foundationalMastered}/{Math.ceil(tierStatus.foundationalTotal * 0.6)} to unlock
+            </span>
+          )}
+          {tierStatus.intermediateUnlocked && !tierStatus.advancedUnlocked && tierStatus.intermediateTotal > 0 && (
+            <span className="flex items-center gap-1">
+              <Lock className="h-3 w-3" />
+              Advanced: {tierStatus.intermediateMastered}/{Math.ceil(tierStatus.intermediateTotal * 0.6)} to unlock
+            </span>
+          )}
+          {tierStatus.advancedUnlocked && tierStatus.intermediateTotal > 0 && (
+            <span className="flex items-center gap-1 text-emerald-400">
+              <Unlock className="h-3 w-3" />
+              All levels unlocked
+            </span>
+          )}
+        </div>
       </div>
 
       <FlashCard card={currentCard} showAnswer={isRevealed} />

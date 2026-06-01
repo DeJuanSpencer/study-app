@@ -14,7 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ParsedMaterial, FlashCard, Deck } from "@/lib/types";
+import {
+  ParsedMaterial,
+  FlashCard,
+  KeyTerm,
+  ConceptRelation,
+  Deck,
+} from "@/lib/types";
 import { saveDeck } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
@@ -120,12 +126,18 @@ export default function FileUpload() {
         const err = await genRes.json().catch(() => null);
         throw new Error(err?.error || "Failed to generate cards");
       }
-      const { cards } = (await genRes.json()) as { cards: FlashCard[] };
+      const { cards, keyTerms, conceptRelations } = (await genRes.json()) as {
+        cards: FlashCard[];
+        keyTerms?: KeyTerm[];
+        conceptRelations?: ConceptRelation[];
+      };
 
       const deck: Deck = {
         id: uuidv4(),
         title: material.title,
         cards,
+        keyTerms: keyTerms ?? [],
+        conceptRelations: conceptRelations ?? [],
         createdAt: new Date().toISOString(),
         materialMetadata: material.metadata,
       };
@@ -169,7 +181,7 @@ export default function FileUpload() {
   const STEPS = [
     { key: "parsing", label: "Parsing material" },
     { key: "generating", label: "Generating cards" },
-    { key: "validating", label: "Fact-checking" },
+    { key: "validating", label: "Fact-checking & extracting key terms" },
   ] as const;
 
   const currentStepIndex = STEPS.findIndex((s) => s.key === status);
