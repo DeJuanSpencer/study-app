@@ -5,7 +5,7 @@ export async function parsePptx(
   buffer: Buffer,
   fileName: string
 ): Promise<ParsedMaterial> {
-  const ast = await parseOffice(buffer);
+  const ast = await parseOffice(buffer, { fileType: "pptx" });
   const rawText = ast.toText();
 
   const sections = splitIntoSlides(rawText);
