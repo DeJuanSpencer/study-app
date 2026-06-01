@@ -1,8 +1,4 @@
 import { ParsedMaterial } from "../types";
-import { parsePdf } from "./pdf";
-import { parseDocx } from "./docx";
-import { parsePptx } from "./pptx";
-import { parseText } from "./text";
 
 export type SupportedFormat = "pdf" | "docx" | "pptx" | "text";
 
@@ -46,13 +42,21 @@ export async function parseFile(
   }
 
   switch (format) {
-    case "pdf":
+    case "pdf": {
+      const { parsePdf } = await import("./pdf");
       return parsePdf(buffer, fileName);
-    case "docx":
+    }
+    case "docx": {
+      const { parseDocx } = await import("./docx");
       return parseDocx(buffer, fileName);
-    case "pptx":
+    }
+    case "pptx": {
+      const { parsePptx } = await import("./pptx");
       return parsePptx(buffer, fileName);
-    case "text":
+    }
+    case "text": {
+      const { parseText } = await import("./text");
       return parseText(buffer.toString("utf-8"), fileName);
+    }
   }
 }
