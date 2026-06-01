@@ -15,7 +15,11 @@ export async function POST(request: NextRequest) {
         );
       }
       const material = parseText(body.text, body.fileName || "Pasted Text");
-      return NextResponse.json(material);
+      const suggestedCardCount = Math.min(
+        30,
+        Math.max(5, Math.round(material.sections.length * 2 + material.rawText.length / 500))
+      );
+      return NextResponse.json({ ...material, suggestedCardCount });
     }
 
     const formData = await request.formData();
@@ -32,7 +36,11 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     const material = await parseFile(buffer, file.name, file.type);
-    return NextResponse.json(material);
+    const suggestedCardCount = Math.min(
+      30,
+      Math.max(5, Math.round(material.sections.length * 2 + material.rawText.length / 500))
+    );
+    return NextResponse.json({ ...material, suggestedCardCount });
   } catch (error) {
     console.error("[/api/parse] Error:", error);
     const message =

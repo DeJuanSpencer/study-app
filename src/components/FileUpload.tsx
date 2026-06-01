@@ -96,7 +96,9 @@ export default function FileUpload() {
           const err = await parseRes.json().catch(() => null);
           throw new Error(err?.error || "Failed to parse file");
         }
-        material = await parseRes.json();
+        const { suggestedCardCount, ...parsed } = await parseRes.json();
+        material = parsed;
+        if (suggestedCardCount) setCardCount(suggestedCardCount);
       } else if (mode === "text" && pastedText.trim()) {
         const parseRes = await fetch("/api/parse", {
           method: "POST",
@@ -107,7 +109,9 @@ export default function FileUpload() {
           const err = await parseRes.json().catch(() => null);
           throw new Error(err?.error || "Failed to parse text");
         }
-        material = await parseRes.json();
+        const { suggestedCardCount, ...parsed } = await parseRes.json();
+        material = parsed;
+        if (suggestedCardCount) setCardCount(suggestedCardCount);
       } else {
         throw new Error("No content to process");
       }
