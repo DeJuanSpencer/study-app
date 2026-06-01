@@ -15,11 +15,10 @@ const ACCEPTED_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  "application/vnd.ms-powerpoint",
   "text/plain",
 ];
 
-const ACCEPTED_EXTENSIONS = ".pdf,.docx,.pptx,.ppt,.txt";
+const ACCEPTED_EXTENSIONS = ".pdf,.docx,.pptx,.txt";
 
 export default function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
@@ -79,8 +78,8 @@ export default function FileUpload() {
           body: formData,
         });
         if (!parseRes.ok) {
-          const err = await parseRes.json();
-          throw new Error(err.error || "Failed to parse file");
+          const err = await parseRes.json().catch(() => null);
+          throw new Error(err?.error || "Failed to parse file");
         }
         material = await parseRes.json();
       } else if (mode === "text" && pastedText.trim()) {
@@ -90,8 +89,8 @@ export default function FileUpload() {
           body: JSON.stringify({ text: pastedText }),
         });
         if (!parseRes.ok) {
-          const err = await parseRes.json();
-          throw new Error(err.error || "Failed to parse text");
+          const err = await parseRes.json().catch(() => null);
+          throw new Error(err?.error || "Failed to parse text");
         }
         material = await parseRes.json();
       } else {
@@ -106,8 +105,8 @@ export default function FileUpload() {
         body: JSON.stringify({ material, cardCount }),
       });
       if (!genRes.ok) {
-        const err = await genRes.json();
-        throw new Error(err.error || "Failed to generate cards");
+        const err = await genRes.json().catch(() => null);
+        throw new Error(err?.error || "Failed to generate cards");
       }
       const { cards } = (await genRes.json()) as { cards: FlashCard[] };
 
@@ -191,7 +190,7 @@ export default function FileUpload() {
                   <div>
                     <p className="font-medium">Drop your file here</p>
                     <p className="text-sm text-muted-foreground">
-                      PDF, DOCX, PPTX, PPT, or TXT
+                      PDF, DOCX, PPTX, or TXT
                     </p>
                   </div>
                 </>

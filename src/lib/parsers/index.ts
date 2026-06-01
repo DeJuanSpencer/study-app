@@ -16,12 +16,15 @@ export function detectFormat(fileName: string, mimeType?: string): SupportedForm
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   )
     return "docx";
+  if (ext === "ppt" || mimeType === "application/vnd.ms-powerpoint") {
+    throw new Error(
+      "Legacy .ppt files are not supported. Please save the file as .pptx in PowerPoint and re-upload."
+    );
+  }
   if (
     ext === "pptx" ||
-    ext === "ppt" ||
     mimeType ===
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
-    mimeType === "application/vnd.ms-powerpoint"
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
   )
     return "pptx";
   if (ext === "txt" || mimeType === "text/plain") return "text";
@@ -38,7 +41,7 @@ export async function parseFile(
 
   if (!format) {
     throw new Error(
-      `Unsupported file format: ${fileName}. Supported formats: PDF, DOCX, PPTX, PPT, TXT`
+      `Unsupported file format: ${fileName}. Supported formats: PDF, DOCX, PPTX, TXT`
     );
   }
 
