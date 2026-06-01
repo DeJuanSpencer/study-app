@@ -34,8 +34,9 @@ export async function POST(request: NextRequest) {
     const material = await parseFile(buffer, file.name, file.type);
     return NextResponse.json(material);
   } catch (error) {
+    console.error("[/api/parse] Error:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to parse file";
+      error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
