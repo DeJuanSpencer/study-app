@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
+    "@tavily/core": "^0.7.5",
     "@types/pdf-parse": "^1.1.5",
     "@types/uuid": "^10.0.0",
     "class-variance-authority": "^0.7.1",

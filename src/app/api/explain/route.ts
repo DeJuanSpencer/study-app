@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { explainConcept } from "@/lib/ai/explain-concept";
+import { validateExplanation } from "@/lib/ai/validate";
+import { isWebSearchAvailable } from "@/lib/ai/web-search";
 import { ConceptExplanation } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -24,7 +26,20 @@ export async function POST(request: NextRequest) {
       previousExplanation
     );
 
-    return NextResponse.json(explanation);
+    let validatedExplanation = explanation;
+    try {
+      validatedExplanation = await validateExplanation(explanation, context);
+    } catch {
+      // Validation failure should not block explanation delivery
+    }
+
+    return NextResponse.json({
+      ...validatedExplanation,
+      validationMeta: {
+        performed: validatedExplanation.validation !== undefined,
+        webSearchUsed: isWebSearchAvailable(),
+      },
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to explain concept";

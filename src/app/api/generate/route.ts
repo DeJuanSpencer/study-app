@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateCards } from "@/lib/ai/generate-cards";
+import { validateCards } from "@/lib/ai/validate";
+import { isWebSearchAvailable } from "@/lib/ai/web-search";
 import { ParsedMaterial } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -20,7 +22,20 @@ export async function POST(request: NextRequest) {
     const count = Math.min(Math.max(cardCount, 1), 30);
     const cards = await generateCards(material, count);
 
-    return NextResponse.json({ cards });
+    let validatedCards = cards;
+    try {
+      validatedCards = await validateCards(cards, material);
+    } catch {
+      // Validation failure should not block card delivery
+    }
+
+    return NextResponse.json({
+      cards: validatedCards,
+      validation: {
+        performed: validatedCards.some((c) => c.validation !== undefined),
+        webSearchUsed: isWebSearchAvailable(),
+      },
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to generate cards";

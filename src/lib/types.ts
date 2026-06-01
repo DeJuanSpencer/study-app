@@ -27,6 +27,7 @@ export interface FlashCard {
   difficulty: Difficulty;
   sourceSection: string;
   flagged?: "too-easy" | "unclear";
+  validation?: ValidationResult;
 }
 
 export interface Deck {
@@ -59,4 +60,29 @@ export interface ConceptExplanation {
   anchoringExample: string;
   commonMisconceptions: string;
   depth: number;
+  validation?: ValidationResult;
+}
+
+export type ValidationVerdict = "verified" | "uncertain" | "inaccurate";
+
+export interface ValidationIssue {
+  claim: string;
+  problem: string;
+  suggestion?: string;
+}
+
+export interface ValidationResult {
+  verdict: ValidationVerdict;
+  confidence: number;
+  issues: ValidationIssue[];
+  sourcesChecked: string[];
+}
+
+export interface WebSearchResult {
+  query: string;
+  results: Array<{
+    title: string;
+    url: string;
+    content: string;
+  }>;
 }

@@ -244,7 +244,7 @@ export default function FileUpload() {
         {status === "generating" && (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Generating flashcards...
+            Generating & fact-checking...
           </>
         )}
         {(status === "idle" || status === "done" || status === "error") &&

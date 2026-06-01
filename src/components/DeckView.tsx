@@ -56,6 +56,21 @@ export default function DeckView({
     [deck.cards]
   );
 
+  const validationSummary = useMemo(() => {
+    const validated = deck.cards.filter((c) => c.validation);
+    if (validated.length === 0) return null;
+    return {
+      verified: validated.filter((c) => c.validation!.verdict === "verified")
+        .length,
+      uncertain: validated.filter((c) => c.validation!.verdict === "uncertain")
+        .length,
+      inaccurate: validated.filter(
+        (c) => c.validation!.verdict === "inaccurate"
+      ).length,
+      total: validated.length,
+    };
+  }, [deck.cards]);
+
   const filteredCards = useMemo(() => {
     return deck.cards.filter((card) => {
       if (!difficultyFilter.has(card.difficulty)) return false;
@@ -138,6 +153,23 @@ export default function DeckView({
             {deck.cards.length} cards &middot; Created{" "}
             {new Date(deck.createdAt).toLocaleDateString()}
           </p>
+          {validationSummary && (
+            <div className="flex items-center gap-3 mt-1 text-xs">
+              <span className="text-emerald-400">
+                {validationSummary.verified} verified
+              </span>
+              {validationSummary.uncertain > 0 && (
+                <span className="text-amber-400">
+                  {validationSummary.uncertain} unverified
+                </span>
+              )}
+              {validationSummary.inaccurate > 0 && (
+                <span className="text-rose-400">
+                  {validationSummary.inaccurate} issues
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button

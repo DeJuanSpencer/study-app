@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlashCard as FlashCardType } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import ValidationBadge from "./ValidationBadge";
 
 interface FlashCardProps {
   card: FlashCardType;
@@ -45,12 +46,15 @@ export default function FlashCard({
         {/* Front - Question */}
         <div className="absolute inset-0 [backface-visibility:hidden] rounded-xl border border-border bg-card p-6 flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-4">
-            <Badge
-              variant="outline"
-              className={cn("text-xs", DIFFICULTY_STYLES[card.difficulty])}
-            >
-              {card.difficulty}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className={cn("text-xs", DIFFICULTY_STYLES[card.difficulty])}
+              >
+                {card.difficulty}
+              </Badge>
+              <ValidationBadge validation={card.validation} />
+            </div>
             <span className="text-xs text-muted-foreground font-mono">
               {card.concept}
             </span>
@@ -68,12 +72,15 @@ export default function FlashCard({
         {/* Back - Answer */}
         <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-xl border border-border bg-card p-6 flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-4">
-            <Badge
-              variant="outline"
-              className={cn("text-xs", DIFFICULTY_STYLES[card.difficulty])}
-            >
-              {card.difficulty}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className={cn("text-xs", DIFFICULTY_STYLES[card.difficulty])}
+              >
+                {card.difficulty}
+              </Badge>
+              <ValidationBadge validation={card.validation} />
+            </div>
             {onFlag && (
               <div className="flex gap-1">
                 <Button
@@ -108,6 +115,26 @@ export default function FlashCard({
               {card.answer}
             </p>
           </div>
+
+          {card.validation?.issues && card.validation.issues.length > 0 && (
+            <div className="mt-3 p-3 rounded-lg bg-rose-500/5 border border-rose-500/20">
+              <p className="text-xs font-medium text-rose-400 mb-1">
+                Validation Issues:
+              </p>
+              {card.validation.issues.map((issue, i) => (
+                <p key={i} className="text-xs text-muted-foreground mt-1">
+                  {issue.problem}
+                  {issue.suggestion && (
+                    <span className="text-emerald-400">
+                      {" "}
+                      Suggested: {issue.suggestion}
+                    </span>
+                  )}
+                </p>
+              ))}
+            </div>
+          )}
+
           <p className="text-xs text-muted-foreground text-center mt-4">
             From: {card.sourceSection}
           </p>

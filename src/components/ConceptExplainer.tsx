@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, Loader2, BookOpen, Beaker, MapPin, AlertTriangle } from "lucide-react";
+import {
+  ArrowDown,
+  Loader2,
+  BookOpen,
+  Beaker,
+  MapPin,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConceptExplanation } from "@/lib/types";
+import ValidationBadge from "./ValidationBadge";
 
 interface ConceptExplainerProps {
   concept: string;
@@ -129,14 +137,17 @@ export default function ConceptExplainer({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">{concept}</h3>
-        {explanation.depth > 0 && (
-          <span className="text-xs text-muted-foreground font-mono">
-            Depth {explanation.depth}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {explanation.depth > 0 && (
+            <span className="text-xs text-muted-foreground font-mono">
+              Depth {explanation.depth}
+            </span>
+          )}
+          <ValidationBadge validation={explanation.validation} />
+        </div>
       </div>
 
-      {SECTION_CONFIG.map(({ key, label, icon: Icon, description }, i) => (
+      {SECTION_CONFIG.map(({ key, label, icon: Icon, description }) => (
         <Card key={key} className="p-5">
           <div className="flex items-center gap-2 mb-1">
             <Icon className="h-4 w-4 text-muted-foreground" />
@@ -149,6 +160,33 @@ export default function ConceptExplainer({
           </p>
         </Card>
       ))}
+
+      {explanation.validation?.issues &&
+        explanation.validation.issues.length > 0 && (
+          <Card className="p-4 border-rose-500/20">
+            <p className="text-xs font-medium text-rose-400 mb-2">
+              Validation Issues
+            </p>
+            <div className="space-y-2">
+              {explanation.validation.issues.map((issue, i) => (
+                <div
+                  key={i}
+                  className="text-xs p-2 rounded bg-rose-500/5 border border-rose-500/20"
+                >
+                  <p className="font-medium text-rose-400">{issue.claim}</p>
+                  <p className="text-muted-foreground mt-0.5">
+                    {issue.problem}
+                  </p>
+                  {issue.suggestion && (
+                    <p className="text-emerald-400 mt-1">
+                      Suggested: {issue.suggestion}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
       <div className="flex justify-center pt-2">
         <Button
