@@ -8,6 +8,8 @@ import {
   Loader2,
   Filter,
   Trash2,
+  Download,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +23,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import FlashCard from "./FlashCard";
 import { Deck, Difficulty, FlashCard as FlashCardType } from "@/lib/types";
 import { saveDeck, deleteDeck } from "@/lib/storage";
@@ -50,6 +61,10 @@ export default function DeckView({
   const [conceptFilter, setConceptFilter] = useState<Set<string>>(new Set());
   const [regenerating, setRegenerating] = useState(false);
   const [cardCount, setCardCount] = useState(deck.cards.length);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editingCard, setEditingCard] = useState<FlashCardType | null>(null);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editAnswer, setEditAnswer] = useState("");
 
   const concepts = useMemo(
     () => [...new Set(deck.cards.map((c) => c.concept))],
@@ -124,6 +139,41 @@ export default function DeckView({
     onDeckDelete();
   };
 
+  const handleEdit = (cardId: string, question: string, answer: string) => {
+    const updated = {
+      ...deck,
+      cards: deck.cards.map((c) =>
+        c.id === cardId ? { ...c, question, answer } : c
+      ),
+    };
+    saveDeck(updated);
+    onDeckUpdate(updated);
+  };
+
+  const openEditDialog = (card: FlashCardType) => {
+    setEditingCard(card);
+    setEditQuestion(card.question);
+    setEditAnswer(card.answer);
+  };
+
+  const saveEdit = () => {
+    if (editingCard) {
+      handleEdit(editingCard.id, editQuestion, editAnswer);
+      setEditingCard(null);
+    }
+  };
+
+  const handleExport = () => {
+    const json = JSON.stringify(deck, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${deck.title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.studydeck`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const toggleDifficulty = (d: Difficulty) => {
     setDifficultyFilter((prev) => {
       const next = new Set(prev);
@@ -179,9 +229,12 @@ export default function DeckView({
             <GraduationCap className="h-4 w-4 mr-1.5" />
             Study
           </Button>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4" />
+          </Button>
           <Button
             variant="outline"
-            onClick={handleDelete}
+            onClick={() => setShowDeleteDialog(true)}
             className="text-destructive hover:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
@@ -284,6 +337,7 @@ export default function DeckView({
             key={card.id}
             card={card}
             onFlag={handleFlag}
+            onEdit={openEditDialog}
             className={cn(card.flagged && "opacity-50")}
           />
         ))}
@@ -296,6 +350,67 @@ export default function DeckView({
           </p>
         </Card>
       )}
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this deck?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete &ldquo;{deck.title}&rdquo; and all{" "}
+              {deck.cards.length} cards. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!editingCard}
+        onOpenChange={(open) => !open && setEditingCard(null)}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Card</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">
+                Question
+              </label>
+              <Textarea
+                value={editQuestion}
+                onChange={(e) => setEditQuestion(e.target.value)}
+                className="min-h-[100px] resize-y"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Answer</label>
+              <Textarea
+                value={editAnswer}
+                onChange={(e) => setEditAnswer(e.target.value)}
+                className="min-h-[100px] resize-y"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCard(null)}>
+              Cancel
+            </Button>
+            <Button onClick={saveEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

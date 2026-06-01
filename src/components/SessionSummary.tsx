@@ -2,7 +2,14 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw, Lightbulb, CheckCircle2, AlertCircle, MinusCircle } from "lucide-react";
+import {
+  RotateCcw,
+  Lightbulb,
+  CheckCircle2,
+  AlertCircle,
+  MinusCircle,
+  Target,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +110,24 @@ export default function SessionSummary({
           <RotateCcw className="h-4 w-4 mr-1.5" />
           Study Again
         </Button>
+        {stats.missed > 0 && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              const missedIds = result.results
+                .filter((r) => r.grade === "missed-it")
+                .map((r) => r.cardId);
+              sessionStorage.setItem(
+                "studydeck_missed",
+                JSON.stringify(missedIds)
+              );
+              router.push(`/study?id=${deck.id}&mode=missed`);
+            }}
+          >
+            <Target className="h-4 w-4 mr-1.5" />
+            Study Missed ({stats.missed})
+          </Button>
+        )}
         <Button onClick={() => router.push(`/deck?id=${deck.id}`)}>
           Back to Deck
         </Button>

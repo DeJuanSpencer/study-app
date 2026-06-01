@@ -15,6 +15,7 @@ function StudyPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const deckId = searchParams.get("id");
+  const mode = searchParams.get("mode");
   const [deck, setDeck] = useState<Deck | null>(null);
   const [allDecks, setAllDecks] = useState<Deck[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -53,9 +54,24 @@ function StudyPageContent() {
       );
     }
 
+    let studyCards = deck.cards;
+    if (mode === "missed") {
+      try {
+        const raw = sessionStorage.getItem("studydeck_missed");
+        if (raw) {
+          const missedIds: string[] = JSON.parse(raw);
+          const filtered = deck.cards.filter((c) => missedIds.includes(c.id));
+          if (filtered.length > 0) studyCards = filtered;
+          sessionStorage.removeItem("studydeck_missed");
+        }
+      } catch {
+        // fall through to full deck
+      }
+    }
+
     return (
       <div className="px-6 py-8">
-        <StudySession deck={deck} />
+        <StudySession deck={{ ...deck, cards: studyCards }} />
       </div>
     );
   }

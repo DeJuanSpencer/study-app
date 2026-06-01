@@ -1,10 +1,18 @@
 "use client";
 
-import { Check, Minus, X, Eye } from "lucide-react";
+import { useState } from "react";
+import { Check, Minus, X, Eye, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import FlashCard from "./FlashCard";
 import SessionSummary from "./SessionSummary";
+import ConceptExplainer from "./ConceptExplainer";
 import { useStudySession } from "@/hooks/useStudySession";
 import { Deck } from "@/lib/types";
 
@@ -13,6 +21,8 @@ interface StudySessionProps {
 }
 
 export default function StudySession({ deck }: StudySessionProps) {
+  const [explainConcept, setExplainConcept] = useState<string | null>(null);
+
   const {
     currentCard,
     isRevealed,
@@ -91,6 +101,34 @@ export default function StudySession({ deck }: StudySessionProps) {
           </>
         )}
       </div>
+
+      {isRevealed && currentCard && (
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={() => setExplainConcept(currentCard.concept)}
+          >
+            <Lightbulb className="h-4 w-4 mr-1.5" />
+            Explain this concept
+          </Button>
+        </div>
+      )}
+
+      <Dialog
+        open={!!explainConcept}
+        onOpenChange={(open) => !open && setExplainConcept(null)}
+      >
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Concept Explainer</DialogTitle>
+          </DialogHeader>
+          {explainConcept && (
+            <ConceptExplainer key={explainConcept} concept={explainConcept} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

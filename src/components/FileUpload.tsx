@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { Upload, FileText, Loader2, Clipboard, X } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  Loader2,
+  Clipboard,
+  X,
+  Check,
+  Download,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +18,7 @@ import { ParsedMaterial, FlashCard, Deck } from "@/lib/types";
 import { saveDeck } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -26,7 +35,7 @@ export default function FileUpload() {
   const [pastedText, setPastedText] = useState("");
   const [cardCount, setCardCount] = useState(10);
   const [status, setStatus] = useState<
-    "idle" | "parsing" | "generating" | "done" | "error"
+    "idle" | "parsing" | "generating" | "validating" | "done" | "error"
   >("idle");
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,6 +113,9 @@ export default function FileUpload() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ material, cardCount }),
       });
+
+      setStatus("validating");
+
       if (!genRes.ok) {
         const err = await genRes.json().catch(() => null);
         throw new Error(err?.error || "Failed to generate cards");
@@ -127,12 +139,45 @@ export default function FileUpload() {
     }
   };
 
-  const isProcessing = status === "parsing" || status === "generating";
+  const isProcessing =
+    status === "parsing" ||
+    status === "generating" ||
+    status === "validating";
+
+  const importDeck = async (importFile: File) => {
+    setError(null);
+    try {
+      const text = await importFile.text();
+      const data = JSON.parse(text);
+      if (!data.title || !Array.isArray(data.cards)) {
+        throw new Error("Invalid deck file: missing title or cards");
+      }
+      const imported: Deck = {
+        ...data,
+        id: uuidv4(),
+        createdAt: new Date().toISOString(),
+      };
+      saveDeck(imported);
+      router.push(`/deck?id=${imported.id}`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to import deck file"
+      );
+    }
+  };
+
+  const STEPS = [
+    { key: "parsing", label: "Parsing material" },
+    { key: "generating", label: "Generating cards" },
+    { key: "validating", label: "Fact-checking" },
+  ] as const;
+
+  const currentStepIndex = STEPS.findIndex((s) => s.key === status);
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <Tabs defaultValue="upload" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upload" disabled={isProcessing}>
             <Upload className="h-4 w-4 mr-1.5" />
             Upload File
@@ -140,6 +185,10 @@ export default function FileUpload() {
           <TabsTrigger value="paste" disabled={isProcessing}>
             <Clipboard className="h-4 w-4 mr-1.5" />
             Paste Text
+          </TabsTrigger>
+          <TabsTrigger value="import" disabled={isProcessing}>
+            <Download className="h-4 w-4 mr-1.5" />
+            Import Deck
           </TabsTrigger>
         </TabsList>
 
@@ -208,6 +257,29 @@ export default function FileUpload() {
             disabled={isProcessing}
           />
         </TabsContent>
+
+        <TabsContent value="import" className="mt-4">
+          <Card className="relative border-2 border-dashed border-border hover:border-muted-foreground/50 transition-colors cursor-pointer p-10">
+            <input
+              type="file"
+              accept=".studydeck,.json"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) importDeck(f);
+              }}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            />
+            <div className="flex flex-col items-center gap-3 text-center">
+              <Download className="h-10 w-10 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Import a deck file</p>
+                <p className="text-sm text-muted-foreground">
+                  .studydeck or .json exported from StudyDeck
+                </p>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <div className="flex items-center gap-4">
@@ -235,21 +307,45 @@ export default function FileUpload() {
         disabled={isProcessing || (!file && !pastedText.trim())}
         onClick={() => processUpload(file ? "file" : "text")}
       >
-        {status === "parsing" && (
+        {isProcessing ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Parsing material...
+            Processing...
           </>
+        ) : (
+          "Generate Flashcards"
         )}
-        {status === "generating" && (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Generating & fact-checking...
-          </>
-        )}
-        {(status === "idle" || status === "done" || status === "error") &&
-          "Generate Flashcards"}
       </Button>
+
+      {isProcessing && (
+        <div className="space-y-2">
+          {STEPS.map((step, i) => {
+            const isDone = i < currentStepIndex;
+            const isCurrent = i === currentStepIndex;
+            return (
+              <div key={step.key} className="flex items-center gap-3">
+                {isDone ? (
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                ) : isCurrent ? (
+                  <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" />
+                ) : (
+                  <div className="h-4 w-4 rounded-full border border-muted-foreground/30 shrink-0" />
+                )}
+                <span
+                  className={cn(
+                    "text-sm",
+                    isDone && "text-muted-foreground line-through",
+                    isCurrent && "text-foreground font-medium",
+                    !isDone && !isCurrent && "text-muted-foreground/50"
+                  )}
+                >
+                  {step.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {error && (
         <Card className="p-4 border-destructive/50 bg-destructive/10">

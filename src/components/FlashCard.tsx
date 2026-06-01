@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Flag } from "lucide-react";
+import { Flag, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FlashCard as FlashCardType } from "@/lib/types";
@@ -11,6 +11,7 @@ import ValidationBadge from "./ValidationBadge";
 interface FlashCardProps {
   card: FlashCardType;
   onFlag?: (cardId: string, reason: "too-easy" | "unclear") => void;
+  onEdit?: (card: FlashCardType) => void;
   showAnswer?: boolean;
   className?: string;
 }
@@ -24,6 +25,7 @@ const DIFFICULTY_STYLES: Record<string, string> = {
 export default function FlashCard({
   card,
   onFlag,
+  onEdit,
   showAnswer: controlledShow,
   className,
 }: FlashCardProps) {
@@ -81,32 +83,50 @@ export default function FlashCard({
               </Badge>
               <ValidationBadge validation={card.validation} />
             </div>
-            {onFlag && (
+            {(onFlag || onEdit) && (
               <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onFlag(card.id, "too-easy");
-                  }}
-                >
-                  <Flag className="h-3 w-3 mr-1" />
-                  Too easy
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onFlag(card.id, "unclear");
-                  }}
-                >
-                  <Flag className="h-3 w-3 mr-1" />
-                  Unclear
-                </Button>
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-muted-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(card);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
+                {onFlag && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-muted-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFlag(card.id, "too-easy");
+                      }}
+                    >
+                      <Flag className="h-3 w-3 mr-1" />
+                      Too easy
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-muted-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFlag(card.id, "unclear");
+                      }}
+                    >
+                      <Flag className="h-3 w-3 mr-1" />
+                      Unclear
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </div>
