@@ -39,12 +39,12 @@ export default function FlashCard({
     >
       <div
         className={cn(
-          "relative w-full min-h-[280px] transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer",
+          "grid w-full min-h-[280px] transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer",
           isFlipped && "[transform:rotateY(180deg)]"
         )}
       >
         {/* Front - Question */}
-        <div className="absolute inset-0 [backface-visibility:hidden] rounded-xl border border-border bg-card p-6 flex flex-col">
+        <div className="[grid-area:1/1] [backface-visibility:hidden] overflow-y-auto rounded-xl border border-border bg-card p-6 flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
               <Badge
@@ -70,7 +70,7 @@ export default function FlashCard({
         </div>
 
         {/* Back - Answer */}
-        <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-xl border border-border bg-card p-6 flex flex-col">
+        <div className="[grid-area:1/1] [backface-visibility:hidden] [transform:rotateY(180deg)] overflow-y-auto rounded-xl border border-border bg-card p-6 flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
               <Badge
