@@ -13,7 +13,7 @@ export async function generateCards(
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: CARD_GENERATION_SYSTEM_PROMPT,
     messages: [
       {
@@ -26,7 +26,7 @@ export async function generateCards(
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
 
-  return parseCardResponse(text);
+  return parseCardResponse(text, response.stop_reason === "max_tokens");
 }
 
 function buildMaterialPrompt(material: ParsedMaterial): string {
@@ -39,8 +39,23 @@ function buildMaterialPrompt(material: ParsedMaterial): string {
   return parts.join("\n");
 }
 
-function parseCardResponse(text: string): FlashCard[] {
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
+function parseCardResponse(text: string, wasTruncated: boolean = false): FlashCard[] {
+  let cleaned = text.replace(/```(?:json)?\s*/g, "").replace(/```\s*$/g, "").trim();
+
+  let jsonMatch = cleaned.match(/\[[\s\S]*\]/);
+
+  if (!jsonMatch && wasTruncated) {
+    const start = cleaned.indexOf("[");
+    if (start !== -1) {
+      let partial = cleaned.slice(start).replace(/,\s*$/, "");
+      const lastComplete = partial.lastIndexOf("}");
+      if (lastComplete !== -1) {
+        partial = partial.slice(0, lastComplete + 1) + "]";
+        jsonMatch = [partial];
+      }
+    }
+  }
+
   if (!jsonMatch) {
     throw new Error("Failed to parse flashcard response from AI");
   }

@@ -181,7 +181,8 @@ function parseCardValidationResponse(
   expectedCount: number,
   sourcesChecked: string[]
 ): ValidationResult[] {
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  const cleaned = text.replace(/```(?:json)?\s*/g, "").replace(/```\s*$/g, "").trim();
+  const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
     return Array.from({ length: expectedCount }, () => ({
       verdict: "uncertain" as const,
@@ -235,7 +236,8 @@ function parseSingleValidation(
   text: string,
   sourcesChecked: string[]
 ): ValidationResult {
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const cleaned = text.replace(/```(?:json)?\s*/g, "").replace(/```\s*$/g, "").trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     return { verdict: "uncertain", confidence: 0, issues: [], sourcesChecked };
   }

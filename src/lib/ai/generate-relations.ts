@@ -36,7 +36,8 @@ function parseRelationsResponse(
   text: string,
   validConcepts: string[]
 ): ConceptRelation[] {
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  const cleaned = text.replace(/```(?:json)?\s*/g, "").replace(/```\s*$/g, "").trim();
+  const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
   if (!jsonMatch) return [];
 
   try {

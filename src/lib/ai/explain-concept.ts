@@ -49,7 +49,8 @@ function parseExplanationResponse(
   concept: string,
   depth: number
 ): ConceptExplanation {
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const cleaned = text.replace(/```(?:json)?\s*/g, "").replace(/```\s*$/g, "").trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error("Failed to parse explanation response from AI");
   }

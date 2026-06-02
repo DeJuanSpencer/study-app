@@ -12,7 +12,7 @@ export async function generateKeyTerms(
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: KEY_TERMS_SYSTEM_PROMPT,
     messages: [
       {
@@ -25,7 +25,7 @@ export async function generateKeyTerms(
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
 
-  return parseTermsResponse(text);
+  return parseTermsResponse(text, response.stop_reason === "max_tokens");
 }
 
 function buildMaterialPrompt(material: ParsedMaterial): string {
@@ -38,8 +38,23 @@ function buildMaterialPrompt(material: ParsedMaterial): string {
   return parts.join("\n");
 }
 
-function parseTermsResponse(text: string): KeyTerm[] {
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
+function parseTermsResponse(text: string, wasTruncated: boolean = false): KeyTerm[] {
+  let cleaned = text.replace(/```(?:json)?\s*/g, "").replace(/```\s*$/g, "").trim();
+
+  let jsonMatch = cleaned.match(/\[[\s\S]*\]/);
+
+  if (!jsonMatch && wasTruncated) {
+    const start = cleaned.indexOf("[");
+    if (start !== -1) {
+      let partial = cleaned.slice(start).replace(/,\s*$/, "");
+      const lastComplete = partial.lastIndexOf("}");
+      if (lastComplete !== -1) {
+        partial = partial.slice(0, lastComplete + 1) + "]";
+        jsonMatch = [partial];
+      }
+    }
+  }
+
   if (!jsonMatch) {
     throw new Error("Failed to parse key terms response from AI");
   }
