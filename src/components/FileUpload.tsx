@@ -25,6 +25,7 @@ import { saveDeck } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { extractTextFromFile } from "@/lib/client-parsers";
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -93,26 +94,27 @@ export default function FileUpload() {
     setError(null);
 
     try {
-      let fetchOptions: RequestInit;
+      let text: string;
+      let fileName: string;
 
       if (mode === "file" && file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("cardCount", String(cardCount));
-        fetchOptions = { method: "POST", body: formData };
+        const extracted = await extractTextFromFile(file);
+        text = extracted.text;
+        fileName = file.name;
       } else if (mode === "text" && pastedText.trim()) {
-        fetchOptions = {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: pastedText, cardCount }),
-        };
+        text = pastedText;
+        fileName = "Pasted Text";
       } else {
         throw new Error("No content to process");
       }
 
       setStatus("generating");
 
-      const res = await fetch("/api/generate", fetchOptions);
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, cardCount, fileName }),
+      });
 
       setStatus("validating");
 

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseFile } from "@/lib/parsers";
 import { parseText } from "@/lib/parsers/text";
 import { generateCards } from "@/lib/ai/generate-cards";
 import { generateKeyTerms } from "@/lib/ai/generate-terms";
@@ -20,40 +19,21 @@ function suggestCardCount(material: ParsedMaterial): number {
 
 export async function POST(request: NextRequest) {
   try {
-    const contentType = request.headers.get("content-type") || "";
+    const body = await request.json();
     let material: ParsedMaterial;
     let cardCount = 10;
 
-    if (contentType.includes("multipart/form-data")) {
-      const formData = await request.formData();
-      const file = formData.get("file") as File | null;
-      cardCount = parseInt(formData.get("cardCount") as string) || 10;
-
-      if (!file) {
-        return NextResponse.json(
-          { error: "No file uploaded" },
-          { status: 400 }
-        );
-      }
-
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      material = await parseFile(buffer, file.name, file.type);
+    if (body.text) {
+      material = parseText(body.text, body.fileName || "Pasted Text");
+      cardCount = body.cardCount ?? 10;
+    } else if (body.material) {
+      material = body.material;
+      cardCount = body.cardCount ?? 10;
     } else {
-      const body = await request.json();
-
-      if (body.text) {
-        material = parseText(body.text, body.fileName || "Pasted Text");
-        cardCount = body.cardCount ?? 10;
-      } else if (body.material) {
-        material = body.material;
-        cardCount = body.cardCount ?? 10;
-      } else {
-        return NextResponse.json(
-          { error: "Missing file or text content" },
-          { status: 400 }
-        );
-      }
+      return NextResponse.json(
+        { error: "Missing text or material content" },
+        { status: 400 }
+      );
     }
 
     const count = Math.min(Math.max(cardCount, 1), 30);
