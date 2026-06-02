@@ -57,15 +57,24 @@ export default function FileUpload() {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped) {
-      setFile(dropped);
-      setError(null);
-    }
+  const suggestCount = useCallback((sizeInBytes: number) => {
+    const estimatedChars = sizeInBytes * 0.5;
+    setCardCount(Math.min(30, Math.max(5, Math.round(estimatedChars / 500))));
   }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const dropped = e.dataTransfer.files[0];
+      if (dropped) {
+        setFile(dropped);
+        setError(null);
+        suggestCount(dropped.size);
+      }
+    },
+    [suggestCount]
+  );
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,9 +82,10 @@ export default function FileUpload() {
       if (selected) {
         setFile(selected);
         setError(null);
+        suggestCount(selected.size);
       }
     },
-    []
+    [suggestCount]
   );
 
   const processUpload = async (mode: "file" | "text") => {
@@ -262,7 +272,14 @@ export default function FileUpload() {
             placeholder="Paste your study material here..."
             className="min-h-[200px] resize-y"
             value={pastedText}
-            onChange={(e) => setPastedText(e.target.value)}
+            onChange={(e) => {
+              setPastedText(e.target.value);
+              if (e.target.value.trim().length > 100) {
+                setCardCount(
+                  Math.min(30, Math.max(5, Math.round(e.target.value.length / 500)))
+                );
+              }
+            }}
             disabled={isProcessing}
           />
         </TabsContent>
