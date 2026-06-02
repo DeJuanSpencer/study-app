@@ -15,10 +15,10 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ParsedMaterial,
   FlashCard,
   KeyTerm,
   ConceptRelation,
+  MaterialMetadata,
   Deck,
 } from "@/lib/types";
 import { saveDeck } from "@/lib/storage";
@@ -83,76 +83,60 @@ export default function FileUpload() {
     setError(null);
 
     try {
-      let material: ParsedMaterial;
+      let fetchOptions: RequestInit;
 
       if (mode === "file" && file) {
         const formData = new FormData();
         formData.append("file", file);
-        const parseRes = await fetch("/api/parse", {
-          method: "POST",
-          body: formData,
-        });
-        if (!parseRes.ok) {
-          const err = await parseRes.json().catch(() => null);
-          throw new Error(err?.error || "Failed to parse file");
-        }
-        const { suggestedCardCount, ...parsed } = await parseRes.json();
-        material = parsed;
-        if (suggestedCardCount) setCardCount(suggestedCardCount);
+        formData.append("cardCount", String(cardCount));
+        fetchOptions = { method: "POST", body: formData };
       } else if (mode === "text" && pastedText.trim()) {
-        const parseRes = await fetch("/api/parse", {
+        fetchOptions = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: pastedText }),
-        });
-        if (!parseRes.ok) {
-          const err = await parseRes.json().catch(() => null);
-          throw new Error(err?.error || "Failed to parse text");
-        }
-        const { suggestedCardCount, ...parsed } = await parseRes.json();
-        material = parsed;
-        if (suggestedCardCount) setCardCount(suggestedCardCount);
+          body: JSON.stringify({ text: pastedText, cardCount }),
+        };
       } else {
         throw new Error("No content to process");
       }
 
       setStatus("generating");
 
-      const trimmedMaterial = {
-        ...material,
-        rawText: material.rawText.slice(0, 100_000),
-        sections: material.sections.map((s) => ({
-          ...s,
-          content: s.content.slice(0, 20_000),
-        })),
-      };
-
-      const genRes = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ material: trimmedMaterial, cardCount }),
-      });
+      const res = await fetch("/api/generate", fetchOptions);
 
       setStatus("validating");
 
-      if (!genRes.ok) {
-        const err = await genRes.json().catch(() => null);
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
         throw new Error(err?.error || "Failed to generate cards");
       }
-      const { cards, keyTerms, conceptRelations } = (await genRes.json()) as {
+
+      const {
+        cards,
+        keyTerms,
+        conceptRelations,
+        title,
+        metadata,
+        suggestedCardCount,
+      } = (await res.json()) as {
         cards: FlashCard[];
         keyTerms?: KeyTerm[];
         conceptRelations?: ConceptRelation[];
+        title: string;
+        metadata: MaterialMetadata;
+        suggestedCardCount?: number;
       };
+
+      if (suggestedCardCount) setCardCount(suggestedCardCount);
 
       const deck: Deck = {
         id: uuidv4(),
-        title: material.title,
+        title,
         cards,
         keyTerms: keyTerms ?? [],
         conceptRelations: conceptRelations ?? [],
         createdAt: new Date().toISOString(),
-        materialMetadata: material.metadata,
+        materialMetadata: metadata,
       };
       saveDeck(deck);
 
