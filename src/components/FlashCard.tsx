@@ -12,6 +12,7 @@ interface FlashCardProps {
   card: FlashCardType;
   onFlag?: (cardId: string, reason: "too-easy" | "unclear") => void;
   onEdit?: (card: FlashCardType) => void;
+  onClick?: () => void;
   showAnswer?: boolean;
   className?: string;
 }
@@ -26,6 +27,7 @@ export default function FlashCard({
   card,
   onFlag,
   onEdit,
+  onClick,
   showAnswer: controlledShow,
   className,
 }: FlashCardProps) {
@@ -36,7 +38,8 @@ export default function FlashCard({
     <div
       className={cn("perspective-[1000px] w-full", className)}
       onClick={() => {
-        if (controlledShow === undefined) setInternalFlipped(!internalFlipped);
+        if (onClick) onClick();
+        else if (controlledShow === undefined) setInternalFlipped(!internalFlipped);
       }}
     >
       <div

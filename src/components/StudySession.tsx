@@ -90,7 +90,11 @@ export default function StudySession({ deck }: StudySessionProps) {
         </div>
       </div>
 
-      <FlashCard card={currentCard} showAnswer={isRevealed} />
+      <FlashCard
+        card={currentCard}
+        showAnswer={isRevealed}
+        onClick={!isRevealed ? reveal : undefined}
+      />
 
       <div className="flex justify-center gap-3">
         {!isRevealed ? (
