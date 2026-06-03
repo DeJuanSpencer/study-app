@@ -135,6 +135,7 @@ export interface EvaluationResult {
   gaps: string[];
   corrections: string[];
   nextStep: string;
+  validation?: ValidationResult;
 }
 
 export interface SocraticMessage {
@@ -153,4 +154,5 @@ export interface SocraticSummary {
   emerging: string[];
   toExplore: string[];
   depth: string;
+  validation?: ValidationResult;
 }

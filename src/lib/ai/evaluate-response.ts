@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { EvaluationResult, AITone } from "../types";
 import { EVALUATE_RESPONSE_SYSTEM_PROMPT } from "./prompts";
+import { validateFeedback } from "./validate";
 
 const client = new Anthropic();
 
@@ -28,7 +29,18 @@ export async function evaluateExplanation(
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
 
-  return parseEvaluationResponse(text);
+  const evaluation = parseEvaluationResponse(text);
+
+  if (sourceContext && (evaluation.corrections.length > 0 || evaluation.gaps.length > 0)) {
+    const feedbackText = [
+      ...evaluation.corrections.map((c) => `Correction: ${c}`),
+      ...evaluation.gaps.map((g) => `Gap: ${g}`),
+      ...evaluation.strengths.map((s) => `Strength: ${s}`),
+    ].join("\n");
+    evaluation.validation = await validateFeedback(feedbackText, sourceContext, concept);
+  }
+
+  return evaluation;
 }
 
 export async function evaluateSynthesis(
@@ -55,7 +67,19 @@ export async function evaluateSynthesis(
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
 
-  return parseEvaluationResponse(text);
+  const evaluation = parseEvaluationResponse(text);
+
+  if (sourceContext && (evaluation.corrections.length > 0 || evaluation.gaps.length > 0)) {
+    const feedbackText = [
+      ...evaluation.corrections.map((c) => `Correction: ${c}`),
+      ...evaluation.gaps.map((g) => `Gap: ${g}`),
+      ...evaluation.strengths.map((s) => `Strength: ${s}`),
+    ].join("\n");
+    const conceptLabel = concepts.join(", ");
+    evaluation.validation = await validateFeedback(feedbackText, sourceContext, conceptLabel);
+  }
+
+  return evaluation;
 }
 
 function parseEvaluationResponse(text: string): EvaluationResult {

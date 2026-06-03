@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Deck, EvaluationResult } from "@/lib/types";
 import { useConceptMastery } from "@/hooks/useConceptMastery";
+import { buildSourceContext } from "@/lib/ai/source-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,7 @@ type SynthesisPhase = "prompt" | "evaluating" | "feedback";
 export default function SynthesisSession({ deck }: SynthesisSessionProps) {
   const router = useRouter();
   const { concepts, updateMastery } = useConceptMastery(deck);
+  const sourceContext = useMemo(() => buildSourceContext(deck), [deck]);
   const [phase, setPhase] = useState<SynthesisPhase>("prompt");
   const [response, setResponse] = useState("");
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
@@ -58,6 +60,7 @@ export default function SynthesisSession({ deck }: SynthesisSessionProps) {
           studentResponse: response,
           mode: "synthesis",
           concepts: selected.map((c) => c.name),
+          sourceContext,
         }),
       });
 
@@ -73,7 +76,7 @@ export default function SynthesisSession({ deck }: SynthesisSessionProps) {
       setError(err instanceof Error ? err.message : "Evaluation failed");
       setPhase("prompt");
     }
-  }, [response, selected]);
+  }, [response, selected, sourceContext]);
 
   const handleContinue = () => {
     if (evaluation) {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Deck } from "@/lib/types";
 import { useSocraticChat } from "@/hooks/useSocraticChat";
 import { useConceptMastery } from "@/hooks/useConceptMastery";
+import { buildSourceContext } from "@/lib/ai/source-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import AIAvatar from "./AIAvatar";
 import ChatBubble from "./ChatBubble";
 import TypingIndicator from "./TypingIndicator";
+import ValidationBadge from "./ValidationBadge";
 
 interface SocraticSessionProps {
   deck: Deck;
@@ -24,6 +26,7 @@ export default function SocraticSession({
   concept,
 }: SocraticSessionProps) {
   const router = useRouter();
+  const sourceContext = useMemo(() => buildSourceContext(deck), [deck]);
   const {
     messages,
     isThinking,
@@ -33,7 +36,7 @@ export default function SocraticSession({
     turnCount,
     send,
     startSession,
-  } = useSocraticChat(concept, deck.id);
+  } = useSocraticChat(concept, deck.id, "supportive", sourceContext);
   const { updateMastery } = useConceptMastery(deck);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -84,9 +87,12 @@ export default function SocraticSession({
           <div className="flex justify-center mb-4">
             <AIAvatar size="lg" />
           </div>
-          <h3 className="text-[22px] font-heading font-semibold text-foreground mb-2">
-            Socratic Session Complete
-          </h3>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <h3 className="text-[22px] font-heading font-semibold text-foreground">
+              Socratic Session Complete
+            </h3>
+            <ValidationBadge validation={summary.validation} />
+          </div>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-[500px] mx-auto">
             {summary.depth}
           </p>

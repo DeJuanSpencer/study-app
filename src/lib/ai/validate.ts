@@ -10,6 +10,7 @@ import {
 import {
   CARD_VALIDATION_SYSTEM_PROMPT,
   EXPLANATION_VALIDATION_SYSTEM_PROMPT,
+  FEEDBACK_VALIDATION_SYSTEM_PROMPT,
 } from "./prompts";
 import { searchTopics } from "./web-search";
 
@@ -255,6 +256,52 @@ function parseSingleValidation(
       issues: raw.issues ?? [],
       sourcesChecked,
     };
+  } catch {
+    return { verdict: "uncertain", confidence: 0, issues: [], sourcesChecked };
+  }
+}
+
+export async function validateFeedback(
+  feedbackContent: string,
+  sourceContext: string,
+  concept: string
+): Promise<ValidationResult> {
+  const searchQueries = [`${concept} key facts`, `${concept} common misconceptions`];
+  const webResults = await searchTopics(searchQueries, 3);
+
+  const webContext =
+    webResults.length > 0
+      ? webResults
+          .map(
+            (wr) =>
+              `Search: "${wr.query}"\n${wr.results
+                .map((r) => `- [${r.title}](${r.url}): ${r.content.slice(0, 300)}`)
+                .join("\n")}`
+          )
+          .join("\n\n")
+      : "No web search results available.";
+
+  const sourcesChecked = ["source-material", "model-knowledge"];
+  if (webResults.length > 0) {
+    sourcesChecked.push(...webResults.map((wr) => `web:${wr.query}`));
+  }
+
+  try {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      system: FEEDBACK_VALIDATION_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: `## Concept\n${concept}\n\n## Source Material\n${sourceContext}\n\n## Web Reference Data\n${webContext}\n\n## AI Feedback to Validate\n${feedbackContent}`,
+        },
+      ],
+    });
+
+    const text =
+      response.content[0].type === "text" ? response.content[0].text : "";
+    return parseSingleValidation(text, sourcesChecked);
   } catch {
     return { verdict: "uncertain", confidence: 0, issues: [], sourcesChecked };
   }

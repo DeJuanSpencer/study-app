@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ScoreRing from "./ScoreRing";
 import FeedbackCard from "./FeedbackCard";
+import ValidationBadge from "./ValidationBadge";
 import { cn } from "@/lib/utils";
 
 const TONE_LABELS: Record<
@@ -69,9 +70,12 @@ export default function FeedbackPanel({
       <Card className="p-6 flex items-center gap-6">
         <ScoreRing score={evaluation.score} size={80} strokeWidth={6} />
         <div className="flex-1">
-          <h3 className="text-lg font-heading font-semibold m-0">
-            {heading}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-heading font-semibold m-0">
+              {heading}
+            </h3>
+            <ValidationBadge validation={evaluation.validation} />
+          </div>
           <p className="text-sm text-muted-foreground leading-relaxed mt-1 m-0">
             {labels.intro}
           </p>

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { SocraticMessage, SocraticResponse, AITone } from "../types";
 import { SOCRATIC_SYSTEM_PROMPT } from "./prompts";
+import { validateFeedback } from "./validate";
 
 const client = new Anthropic();
 
@@ -46,7 +47,18 @@ export async function socraticTurn(
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
 
-  return parseSocraticResponse(text);
+  const result = parseSocraticResponse(text);
+
+  if (result.isComplete && result.summary && sourceContext) {
+    const summaryText = [
+      `Demonstrated: ${result.summary.demonstrated.join(", ")}`,
+      `Emerging: ${result.summary.emerging.join(", ")}`,
+      `Depth assessment: ${result.summary.depth}`,
+    ].join("\n");
+    result.summary.validation = await validateFeedback(summaryText, sourceContext, concept);
+  }
+
+  return result;
 }
 
 function parseSocraticResponse(text: string): SocraticResponse {

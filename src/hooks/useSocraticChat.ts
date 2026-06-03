@@ -8,7 +8,8 @@ type SocraticPhase = "chatting" | "complete";
 export function useSocraticChat(
   concept: string,
   deckId: string,
-  tone: AITone = "supportive"
+  tone: AITone = "supportive",
+  sourceContext?: string
 ) {
   const [messages, setMessages] = useState<SocraticMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -26,6 +27,7 @@ export function useSocraticChat(
           concept,
           messages: allMessages,
           tone,
+          sourceContext,
           forceComplete,
         }),
       });
@@ -37,7 +39,7 @@ export function useSocraticChat(
 
       return res.json();
     },
-    [concept, tone]
+    [concept, tone, sourceContext]
   );
 
   const startSession = useCallback(async () => {

@@ -8,7 +8,8 @@ type ExplainPhase = "prompt" | "writing" | "evaluating" | "feedback";
 export function useExplainMode(
   concept: string,
   deckId: string,
-  tone: AITone = "supportive"
+  tone: AITone = "supportive",
+  sourceContext?: string
 ) {
   const [phase, setPhase] = useState<ExplainPhase>("prompt");
   const [response, setResponse] = useState("");
@@ -30,6 +31,7 @@ export function useExplainMode(
           studentResponse: response,
           tone,
           mode: "explain",
+          sourceContext,
         }),
       });
 
@@ -45,7 +47,7 @@ export function useExplainMode(
       setError(err instanceof Error ? err.message : "Evaluation failed");
       setPhase("writing");
     }
-  }, [concept, response, tone]);
+  }, [concept, response, tone, sourceContext]);
 
   const reset = useCallback(() => {
     setPhase("prompt");

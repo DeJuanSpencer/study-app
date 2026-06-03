@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Deck } from "@/lib/types";
 import { useExplainMode } from "@/hooks/useExplainMode";
 import { useConceptMastery } from "@/hooks/useConceptMastery";
+import { buildSourceContext } from "@/lib/ai/source-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,8 +25,9 @@ export default function ExplainModeSession({
   concept,
 }: ExplainModeSessionProps) {
   const router = useRouter();
+  const sourceContext = useMemo(() => buildSourceContext(deck), [deck]);
   const { phase, response, evaluation, error, setResponse, submit, reset } =
-    useExplainMode(concept, deck.id);
+    useExplainMode(concept, deck.id, "supportive", sourceContext);
   const { getLevel, updateMastery } = useConceptMastery(deck);
   const level = getLevel(concept);
 
