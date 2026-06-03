@@ -96,6 +96,12 @@ export default function Header({ hasDecks, onNewMaterial }: HeaderProps = {}) {
             <span className="hidden sm:inline font-mono">{THEME_LABELS[theme]}</span>
           </button>
 
+          {!user && (
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+          )}
+
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
