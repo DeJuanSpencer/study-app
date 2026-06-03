@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
+import StudyHub from "@/components/StudyHub";
+import QuickReviewSession from "@/components/QuickReviewSession";
+import ExplainModeSession from "@/components/ExplainModeSession";
+import SocraticSession from "@/components/SocraticSession";
+import SynthesisSession from "@/components/SynthesisSession";
 import StudySession from "@/components/StudySession";
 import { loadDeck, loadAllDecks } from "@/lib/storage";
 import { Deck } from "@/lib/types";
@@ -16,6 +21,7 @@ function StudyPageContent() {
   const router = useRouter();
   const deckId = searchParams.get("id");
   const mode = searchParams.get("mode");
+  const concept = searchParams.get("concept");
   const [deck, setDeck] = useState<Deck | null>(null);
   const [allDecks, setAllDecks] = useState<Deck[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -54,8 +60,48 @@ function StudyPageContent() {
       );
     }
 
-    let studyCards = deck.cards;
+    if (!mode) {
+      return (
+        <div className="px-6 py-8">
+          <StudyHub deck={deck} />
+        </div>
+      );
+    }
+
+    if (mode === "review") {
+      return (
+        <div className="px-6 py-8">
+          <QuickReviewSession deck={deck} />
+        </div>
+      );
+    }
+
+    if (mode === "explain" && concept) {
+      return (
+        <div className="px-6 py-8">
+          <ExplainModeSession deck={deck} concept={concept} />
+        </div>
+      );
+    }
+
+    if (mode === "socratic" && concept) {
+      return (
+        <div className="px-6 py-8">
+          <SocraticSession deck={deck} concept={concept} />
+        </div>
+      );
+    }
+
+    if (mode === "synthesis") {
+      return (
+        <div className="px-6 py-8">
+          <SynthesisSession deck={deck} />
+        </div>
+      );
+    }
+
     if (mode === "missed") {
+      let studyCards = deck.cards;
       try {
         const raw = sessionStorage.getItem("studydeck_missed");
         if (raw) {
@@ -67,11 +113,18 @@ function StudyPageContent() {
       } catch {
         // fall through to full deck
       }
+
+      return (
+        <div className="px-6 py-8">
+          <StudySession deck={{ ...deck, cards: studyCards }} />
+        </div>
+      );
     }
 
+    // Fallback: unrecognized mode → StudyHub
     return (
       <div className="px-6 py-8">
-        <StudySession deck={{ ...deck, cards: studyCards }} />
+        <StudyHub deck={deck} />
       </div>
     );
   }

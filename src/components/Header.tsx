@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, GraduationCap, Lightbulb, TrendingUp } from "lucide-react";
+import { BookOpen, LayoutDashboard, GraduationCap, Lightbulb, TrendingUp, Palette } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { ThemeName } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -13,38 +15,63 @@ const NAV_ITEMS = [
   { href: "/progress", label: "Progress", icon: TrendingUp },
 ];
 
+const THEME_CYCLE: ThemeName[] = ["focus", "scholar", "depth"];
+const THEME_LABELS: Record<ThemeName, string> = {
+  focus: "Focus",
+  scholar: "Scholar",
+  depth: "Depth",
+};
+
 export default function Header() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+
+  const cycleTheme = () => {
+    const idx = THEME_CYCLE.indexOf(theme);
+    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+    setTheme(next);
+  };
 
   return (
-    <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+    <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <GraduationCap className="h-5 w-5 text-primary" />
-          <span className="font-semibold tracking-tight">StudyDeck</span>
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            <span className="font-semibold tracking-tight font-heading">StudyDeck</span>
+          </Link>
 
-        <nav className="flex items-center gap-1">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
-                  isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+          <nav className="flex items-center gap-1">
+            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+              const isActive =
+                href === "/" ? pathname === "/" : pathname.startsWith(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
+                    isActive
+                      ? "bg-accent text-accent-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <button
+          onClick={cycleTheme}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          title={`Theme: ${THEME_LABELS[theme]}`}
+        >
+          <Palette className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline font-mono">{THEME_LABELS[theme]}</span>
+        </button>
       </div>
     </header>
   );

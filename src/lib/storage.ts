@@ -1,8 +1,9 @@
-import { Deck, StudySessionResult, CardMastery } from "./types";
+import { Deck, StudySessionResult, CardMastery, ConceptMastery } from "./types";
 
 const DECKS_KEY = "studydeck_decks";
 const SESSIONS_KEY = "studydeck_sessions";
 const MASTERY_KEY = "studydeck_mastery";
+const CONCEPT_MASTERY_KEY = "studydeck_concept_mastery";
 
 function getItem<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -86,4 +87,26 @@ export function saveMastery(mastery: CardMastery): void {
     all.push(mastery);
   }
   setItem(MASTERY_KEY, all);
+}
+
+export function loadConceptMastery(deckId: string): ConceptMastery[] {
+  const all = getItem<ConceptMastery[]>(CONCEPT_MASTERY_KEY) ?? [];
+  return all.filter((m) => m.deckId === deckId);
+}
+
+export function loadAllConceptMastery(): ConceptMastery[] {
+  return getItem<ConceptMastery[]>(CONCEPT_MASTERY_KEY) ?? [];
+}
+
+export function saveConceptMastery(mastery: ConceptMastery): void {
+  const all = getItem<ConceptMastery[]>(CONCEPT_MASTERY_KEY) ?? [];
+  const idx = all.findIndex(
+    (m) => m.conceptId === mastery.conceptId && m.deckId === mastery.deckId
+  );
+  if (idx >= 0) {
+    all[idx] = mastery;
+  } else {
+    all.push(mastery);
+  }
+  setItem(CONCEPT_MASTERY_KEY, all);
 }

@@ -111,3 +111,46 @@ export interface WebSearchResult {
     content: string;
   }>;
 }
+
+// ── Study Modes ──
+
+export type UnderstandingLevel = 0 | 1 | 2 | 3 | 4 | 5;
+
+export type StudyMode = "explain" | "socratic" | "review" | "synthesis";
+
+export type AITone = "supportive" | "rigorous" | "neutral";
+
+export interface ConceptMastery {
+  conceptId: string;
+  conceptName: string;
+  deckId: string;
+  level: UnderstandingLevel;
+  lastMode: StudyMode | null;
+  updatedAt: string;
+}
+
+export interface EvaluationResult {
+  score: number;
+  strengths: string[];
+  gaps: string[];
+  corrections: string[];
+  nextStep: string;
+}
+
+export interface SocraticMessage {
+  role: "assistant" | "user";
+  text: string;
+}
+
+export interface SocraticResponse {
+  message: string;
+  isComplete: boolean;
+  summary?: SocraticSummary;
+}
+
+export interface SocraticSummary {
+  demonstrated: string[];
+  emerging: string[];
+  toExplore: string[];
+  depth: string;
+}
