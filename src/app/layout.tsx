@@ -5,6 +5,7 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import SupabaseHydrator from "@/components/SupabaseHydrator";
 import "./globals.css";
 
 const sourceSerif = Source_Serif_4({
@@ -41,6 +42,7 @@ export default function RootLayout({
       className={`${sourceSerif.variable} ${dmSans.variable} ${jetbrainsMono.variable} theme-focus h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <SupabaseHydrator />
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
