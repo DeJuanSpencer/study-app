@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 export async function GET() {
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   }
 
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   const [decks, sessions, cardMastery, conceptMastery] = await Promise.all([
-    supabase.from("decks").select("*"),
-    supabase.from("study_sessions").select("*"),
-    supabase.from("card_mastery").select("*"),
-    supabase.from("concept_mastery").select("*"),
+    supabase.from("decks").select("*").eq("user_id", user.id),
+    supabase.from("study_sessions").select("*").eq("user_id", user.id),
+    supabase.from("card_mastery").select("*").eq("user_id", user.id),
+    supabase.from("concept_mastery").select("*").eq("user_id", user.id),
   ]);
 
   if (decks.error) {

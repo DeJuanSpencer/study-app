@@ -5,6 +5,7 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 import SupabaseHydrator from "@/components/SupabaseHydrator";
 import "./globals.css";
 
@@ -42,8 +43,10 @@ export default function RootLayout({
       className={`${sourceSerif.variable} ${dmSans.variable} ${jetbrainsMono.variable} theme-focus h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <SupabaseHydrator />
-        <TooltipProvider>{children}</TooltipProvider>
+        <AuthProvider>
+          <SupabaseHydrator />
+          <TooltipProvider>{children}</TooltipProvider>
+        </AuthProvider>
       </body>
     </html>
   );

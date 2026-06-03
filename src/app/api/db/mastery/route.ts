@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 export async function POST(req: NextRequest) {
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+  }
+
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const { action, mastery } = await req.json();
@@ -11,6 +18,7 @@ export async function POST(req: NextRequest) {
   if (action === "save-card") {
     const { error } = await supabase.from("card_mastery").upsert(
       {
+        user_id: user.id,
         card_id: mastery.cardId,
         deck_id: mastery.deckId,
         ease: mastery.ease,
@@ -31,6 +39,7 @@ export async function POST(req: NextRequest) {
   if (action === "save-concept") {
     const { error } = await supabase.from("concept_mastery").upsert(
       {
+        user_id: user.id,
         concept_id: mastery.conceptId,
         concept_name: mastery.conceptName,
         deck_id: mastery.deckId,

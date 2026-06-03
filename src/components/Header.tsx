@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BookOpen, GraduationCap, Lightbulb, TrendingUp, Palette, Plus } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { BookOpen, GraduationCap, Lightbulb, TrendingUp, Palette, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import { ThemeName } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -29,6 +38,8 @@ interface HeaderProps {
 
 export default function Header({ hasDecks, onNewMaterial }: HeaderProps = {}) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
 
   const cycleTheme = () => {
@@ -84,6 +95,31 @@ export default function Header({ hasDecks, onNewMaterial }: HeaderProps = {}) {
             <Palette className="h-3.5 w-3.5" />
             <span className="hidden sm:inline font-mono">{THEME_LABELS[theme]}</span>
           </button>
+
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-8 w-8 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center hover:opacity-90 transition-opacity">
+                  {(user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? "?").toUpperCase()}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal text-xs text-muted-foreground truncate">
+                  {user.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await signOut();
+                    router.push("/login");
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>
