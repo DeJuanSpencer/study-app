@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, GraduationCap, Lightbulb, TrendingUp, Palette, Plus } from "lucide-react";
+import { BookOpen, GraduationCap, Lightbulb, TrendingUp, Palette, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { ThemeName } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Upload", icon: BookOpen },
-  { href: "/deck", label: "Deck", icon: LayoutDashboard },
+  { href: "/", label: "Home", icon: BookOpen },
   { href: "/study", label: "Study", icon: GraduationCap },
   { href: "/explain", label: "Explain", icon: Lightbulb },
   { href: "/progress", label: "Progress", icon: TrendingUp },
