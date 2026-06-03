@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, GraduationCap, Lightbulb, TrendingUp, Palette } from "lucide-react";
+import { BookOpen, LayoutDashboard, GraduationCap, Lightbulb, TrendingUp, Palette, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { ThemeName } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,12 @@ const THEME_LABELS: Record<ThemeName, string> = {
   depth: "Depth",
 };
 
-export default function Header() {
+interface HeaderProps {
+  hasDecks?: boolean;
+  onNewMaterial?: () => void;
+}
+
+export default function Header({ hasDecks, onNewMaterial }: HeaderProps = {}) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -64,14 +70,22 @@ export default function Header() {
           </nav>
         </div>
 
-        <button
-          onClick={cycleTheme}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-          title={`Theme: ${THEME_LABELS[theme]}`}
-        >
-          <Palette className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline font-mono">{THEME_LABELS[theme]}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {hasDecks && onNewMaterial && (
+            <Button size="sm" onClick={onNewMaterial} className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">New Material</span>
+            </Button>
+          )}
+          <button
+            onClick={cycleTheme}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+            title={`Theme: ${THEME_LABELS[theme]}`}
+          >
+            <Palette className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline font-mono">{THEME_LABELS[theme]}</span>
+          </button>
+        </div>
       </div>
     </header>
   );
