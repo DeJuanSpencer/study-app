@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 export async function GET() {
+  if (!supabase) {
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+  }
+
   const [decks, sessions, cardMastery, conceptMastery] = await Promise.all([
     supabase.from("decks").select("*"),
     supabase.from("study_sessions").select("*"),
