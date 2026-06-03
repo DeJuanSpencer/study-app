@@ -5,11 +5,12 @@ import { SocraticMessage, AITone } from "@/lib/types";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { concept, messages, tone, sourceContext } = body as {
+    const { concept, messages, tone, sourceContext, forceComplete } = body as {
       concept: string;
       messages: SocraticMessage[];
       tone?: AITone;
       sourceContext?: string;
+      forceComplete?: boolean;
     };
 
     if (!concept || typeof concept !== "string") {
@@ -30,7 +31,8 @@ export async function POST(request: NextRequest) {
       concept,
       messages,
       tone ?? "supportive",
-      sourceContext
+      sourceContext,
+      forceComplete
     );
 
     return NextResponse.json(result);

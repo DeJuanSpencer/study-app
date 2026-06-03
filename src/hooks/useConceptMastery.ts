@@ -1,17 +1,47 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { ConceptMastery, StudyMode, UnderstandingLevel } from "@/lib/types";
+import {
+  ConceptMastery,
+  StudyMode,
+  UnderstandingLevel,
+  Grade,
+  SocraticSummary,
+  Deck,
+} from "@/lib/types";
 import { loadConceptMastery, saveConceptMastery } from "@/lib/storage";
 import {
   calculateNewLevel,
   getRecommendedMode,
+  generateRecommendation,
   deriveConceptsFromDeck,
+  Recommendation,
 } from "@/lib/concept-mastery";
-import { Deck } from "@/lib/types";
+
+function initializeConceptMastery(deck: Deck): void {
+  const existing = loadConceptMastery(deck.id);
+  const existingNames = new Set(existing.map((m) => m.conceptName));
+  const concepts = deriveConceptsFromDeck(deck);
+
+  for (const concept of concepts) {
+    if (!existingNames.has(concept.name)) {
+      saveConceptMastery({
+        conceptId: concept.id,
+        conceptName: concept.name,
+        deckId: deck.id,
+        level: 0,
+        lastMode: null,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  }
+}
 
 export function useConceptMastery(deck: Deck) {
-  const [version, setVersion] = useState(0);
+  const [version, setVersion] = useState(() => {
+    initializeConceptMastery(deck);
+    return 0;
+  });
 
   const masteries = useMemo(
     () => loadConceptMastery(deck.id),
@@ -40,18 +70,23 @@ export function useConceptMastery(deck: Deck) {
   );
 
   const updateMastery = useCallback(
-    (conceptName: string, mode: StudyMode, score?: number) => {
+    (
+      conceptName: string,
+      mode: StudyMode,
+      result: {
+        grade?: Grade;
+        score?: number;
+        summary?: SocraticSummary;
+      } = {}
+    ) => {
       const existing = getMastery(conceptName);
-      const currentLevel = existing?.level ?? 0;
-      const newLevel = calculateNewLevel(
-        currentLevel as UnderstandingLevel,
-        mode,
-        score
-      );
+      const currentLevel = (existing?.level ?? 0) as UnderstandingLevel;
+      const newLevel = calculateNewLevel(currentLevel, mode, result);
 
       const concept = deckConcepts.find((c) => c.name === conceptName);
       const updated: ConceptMastery = {
-        conceptId: concept?.id ?? conceptName.toLowerCase().replace(/\s+/g, "-"),
+        conceptId:
+          concept?.id ?? conceptName.toLowerCase().replace(/\s+/g, "-"),
         conceptName,
         deckId: deck.id,
         level: newLevel,
@@ -74,6 +109,11 @@ export function useConceptMastery(deck: Deck) {
     [getMastery]
   );
 
+  const recommendation: Recommendation = useMemo(
+    () => generateRecommendation(masteries),
+    [masteries]
+  );
+
   const conceptsWithMastery = useMemo(
     () =>
       deckConcepts.map((c) => ({
@@ -92,5 +132,6 @@ export function useConceptMastery(deck: Deck) {
     getLevel,
     updateMastery,
     getRecommendation,
+    recommendation,
   };
 }

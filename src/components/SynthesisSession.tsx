@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Deck, EvaluationResult } from "@/lib/types";
 import { useConceptMastery } from "@/hooks/useConceptMastery";
@@ -26,8 +26,23 @@ export default function SynthesisSession({ deck }: SynthesisSessionProps) {
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const eligible = concepts.filter((c) => c.level >= 2);
-  const selected = eligible.slice(0, 3);
+  const eligible = concepts.filter((c) => c.level >= 3);
+  const selected = useMemo(() => {
+    if (eligible.length < 2) return eligible;
+    const relations = deck.conceptRelations ?? [];
+    if (relations.length > 0) {
+      const relatedNames = new Set<string>();
+      for (const r of relations) {
+        if (eligible.some((c) => c.name === r.from) && eligible.some((c) => c.name === r.to)) {
+          relatedNames.add(r.from);
+          relatedNames.add(r.to);
+        }
+      }
+      const related = eligible.filter((c) => relatedNames.has(c.name));
+      if (related.length >= 2) return related.slice(0, 3);
+    }
+    return eligible.slice(0, 3);
+  }, [eligible, deck.conceptRelations]);
 
   const handleSubmit = useCallback(async () => {
     if (!response.trim()) return;
@@ -63,7 +78,7 @@ export default function SynthesisSession({ deck }: SynthesisSessionProps) {
   const handleContinue = () => {
     if (evaluation) {
       for (const c of selected) {
-        updateMastery(c.name, "synthesis", evaluation.score);
+        updateMastery(c.name, "synthesis", { score: evaluation.score });
       }
     }
     router.push(`/study?id=${deck.id}`);

@@ -8,7 +8,8 @@ export async function socraticTurn(
   concept: string,
   messages: SocraticMessage[],
   tone: AITone = "supportive",
-  sourceContext?: string
+  sourceContext?: string,
+  forceComplete?: boolean
 ): Promise<SocraticResponse> {
   const toneInstruction =
     tone === "supportive"
@@ -17,7 +18,11 @@ export async function socraticTurn(
         ? "Be direct and demanding. Don't accept vague answers. Push for precision."
         : "Be balanced and neutral. Focus on the content, not the student's feelings.";
 
-  const systemPrompt = `${SOCRATIC_SYSTEM_PROMPT}\n\nTone: ${toneInstruction}\n\nConcept being explored: "${concept}"${sourceContext ? `\n\nSource material context:\n${sourceContext}` : ""}`;
+  const forceCompleteInstruction = forceComplete
+    ? "\n\nIMPORTANT: This is the final exchange. You MUST wrap up now with a summary of what the student demonstrated."
+    : "";
+
+  const systemPrompt = `${SOCRATIC_SYSTEM_PROMPT}\n\nTone: ${toneInstruction}\n\nConcept being explored: "${concept}"${sourceContext ? `\n\nSource material context:\n${sourceContext}` : ""}${forceCompleteInstruction}`;
 
   const anthropicMessages: Anthropic.MessageParam[] = messages.map((m) => ({
     role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),

@@ -15,25 +15,22 @@ interface StudyHubProps {
 
 export default function StudyHub({ deck }: StudyHubProps) {
   const router = useRouter();
-  const { concepts } = useConceptMastery(deck);
+  const { concepts, recommendation } = useConceptMastery(deck);
   const [pickingFor, setPickingFor] = useState<"explain" | "socratic" | null>(
     null
   );
 
   const readyForExplain = concepts.filter(
-    (c) => c.level >= 1 && c.level <= 3
+    (c) => c.level >= 0 && c.level <= 2
   );
-  const readyForSocratic = concepts.filter(
-    (c) => c.level >= 2 && c.level <= 4
-  );
-  const newConcepts = concepts.filter((c) => c.level === 0);
+  const readyForSocratic = concepts.filter((c) => c.level === 3);
+  const newConcepts = concepts.filter((c) => c.level <= 1);
   const deepConcepts = concepts.filter((c) => c.level >= 4);
   const buildingConcepts = concepts.filter(
     (c) => c.level >= 1 && c.level <= 3
   );
 
-  const weakest = [...concepts].sort((a, b) => a.level - b.level)[0];
-  const synthesisCandidates = concepts.filter((c) => c.level >= 2);
+  const synthesisCandidates = concepts.filter((c) => c.level >= 3);
 
   const handleModeStart = (mode: "explain" | "socratic") => {
     setPickingFor(mode);
@@ -84,42 +81,22 @@ export default function StudyHub({ deck }: StudyHubProps) {
         </p>
       </div>
 
-      {weakest && (
-        <Card
-          className="mb-7 p-6"
-          style={{ borderLeft: "3px solid var(--primary)" }}
-        >
-          <div className="flex items-start gap-3.5">
-            <AIAvatar size="md" />
-            <div>
-              <p className="text-xs font-mono text-primary uppercase tracking-widest mb-1.5">
-                Study Recommendation
-              </p>
-              <p className="text-[15px] text-foreground leading-relaxed mb-1">
-                {buildingConcepts.length > 0 ? (
-                  <>
-                    <strong>{buildingConcepts.length} concepts</strong> are
-                    ready to move deeper.{" "}
-                    {weakest.level <= 2
-                      ? `I’d suggest starting with Explain Mode for ${weakest.name} — you’ve recalled it but haven’t demonstrated real understanding yet.`
-                      : `Try Socratic Challenge for ${weakest.name} to push your reasoning deeper.`}
-                  </>
-                ) : newConcepts.length > 0 ? (
-                  <>
-                    You have <strong>{newConcepts.length} new concepts</strong>{" "}
-                    to learn. Start with Quick Review to build a foundation.
-                  </>
-                ) : (
-                  <>
-                    You&apos;re making great progress! Consider Synthesis Lab to
-                    connect your strongest concepts together.
-                  </>
-                )}
-              </p>
-            </div>
+      <Card
+        className="mb-7 p-6"
+        style={{ borderLeft: "3px solid var(--primary)" }}
+      >
+        <div className="flex items-start gap-3.5">
+          <AIAvatar size="md" />
+          <div>
+            <p className="text-xs font-mono text-primary uppercase tracking-widest mb-1.5">
+              Study Recommendation
+            </p>
+            <p className="text-[15px] text-foreground leading-relaxed mb-1">
+              {recommendation.message}
+            </p>
           </div>
-        </Card>
-      )}
+        </div>
+      </Card>
 
       <p
         className="text-xs font-mono uppercase tracking-widest mb-3"
@@ -169,7 +146,10 @@ export default function StudyHub({ deck }: StudyHubProps) {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <Card className="p-[18px]">
+        <Card
+          className="p-[18px] cursor-pointer hover:bg-[var(--surface-hover,var(--secondary))] transition-all"
+          onClick={() => router.push(`/study?id=${deck.id}&mode=knowledge`)}
+        >
           <p
             className="text-xs font-mono uppercase tracking-widest mb-2"
             style={{ color: "var(--text-tertiary, var(--muted-foreground))" }}

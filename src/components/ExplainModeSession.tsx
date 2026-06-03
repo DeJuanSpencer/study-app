@@ -30,7 +30,7 @@ export default function ExplainModeSession({
 
   const handleContinue = () => {
     if (evaluation) {
-      updateMastery(concept, "explain", evaluation.score);
+      updateMastery(concept, "explain", { score: evaluation.score });
     }
     router.push(`/study?id=${deck.id}`);
   };

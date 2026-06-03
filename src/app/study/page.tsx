@@ -13,6 +13,7 @@ import ExplainModeSession from "@/components/ExplainModeSession";
 import SocraticSession from "@/components/SocraticSession";
 import SynthesisSession from "@/components/SynthesisSession";
 import StudySession from "@/components/StudySession";
+import KnowledgeMap from "@/components/KnowledgeMap";
 import { loadDeck, loadAllDecks } from "@/lib/storage";
 import { Deck } from "@/lib/types";
 
@@ -96,6 +97,14 @@ function StudyPageContent() {
       return (
         <div className="px-6 py-8">
           <SynthesisSession deck={deck} />
+        </div>
+      );
+    }
+
+    if (mode === "knowledge") {
+      return (
+        <div className="px-6 py-8">
+          <KnowledgeMap deck={deck} />
         </div>
       );
     }

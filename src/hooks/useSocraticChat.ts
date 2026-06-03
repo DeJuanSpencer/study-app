@@ -18,7 +18,7 @@ export function useSocraticChat(
   const initializedRef = useRef(false);
 
   const callSocratic = useCallback(
-    async (allMessages: SocraticMessage[]) => {
+    async (allMessages: SocraticMessage[], forceComplete?: boolean) => {
       const res = await fetch("/api/socratic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,6 +26,7 @@ export function useSocraticChat(
           concept,
           messages: allMessages,
           tone,
+          forceComplete,
         }),
       });
 
@@ -71,7 +72,8 @@ export function useSocraticChat(
       setError(null);
 
       try {
-        const result = await callSocratic(updated);
+        const studentTurns = updated.filter((m) => m.role === "user").length;
+        const result = await callSocratic(updated, studentTurns >= 8);
         const aiMessage: SocraticMessage = {
           role: "assistant",
           text: result.message,

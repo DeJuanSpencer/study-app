@@ -62,7 +62,7 @@ export default function SocraticSession({
   };
 
   if (phase === "complete" && summary) {
-    updateMastery(concept, "socratic");
+    updateMastery(concept, "socratic", { summary });
 
     return (
       <div className="max-w-[720px] mx-auto">

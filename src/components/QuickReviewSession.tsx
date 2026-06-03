@@ -53,7 +53,7 @@ export default function QuickReviewSession({ deck }: QuickReviewSessionProps) {
       }
 
       if (currentCard) {
-        updateMastery(currentCard.concept, "review");
+        updateMastery(currentCard.concept, "review", { grade: g });
       }
       commitGrade(g);
       setHonestyCheck(false);
@@ -64,7 +64,7 @@ export default function QuickReviewSession({ deck }: QuickReviewSessionProps) {
 
   const handleHonestyConfirm = useCallback(() => {
     if (currentCard) {
-      updateMastery(currentCard.concept, "review");
+      updateMastery(currentCard.concept, "review", { grade: "got-it" });
     }
     commitGrade("got-it");
     setHonestyCheck(false);
@@ -73,7 +73,7 @@ export default function QuickReviewSession({ deck }: QuickReviewSessionProps) {
 
   const handleHonestyDowngrade = useCallback(() => {
     if (currentCard) {
-      updateMastery(currentCard.concept, "review");
+      updateMastery(currentCard.concept, "review", { grade: "partially" });
     }
     commitGrade("partially");
     setHonestyCheck(false);
